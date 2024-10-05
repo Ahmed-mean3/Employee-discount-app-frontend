@@ -41,6 +41,7 @@ function Extension() {
       console.error("Failed to apply discount", result.message);
     }
   };
+
   const handlePostOrderDiscount = async () => {
     try {
       setLoader(true);
@@ -51,7 +52,7 @@ function Extension() {
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
-          "api-key": "anb*3kW",
+          "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload), // Convert the payload to JSON

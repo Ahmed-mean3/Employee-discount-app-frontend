@@ -11,8 +11,17 @@ import {
   Badge,
   useBreakpoints,
   Page,
+  Button,
+  LegacyStack,
+  Icon,
 } from "@shopify/polaris";
-import { DeleteIcon, DiscountIcon, PlusIcon } from "@shopify/polaris-icons";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  DeleteIcon,
+  DiscountIcon,
+  PlusIcon,
+} from "@shopify/polaris-icons";
 
 import { TitleBar } from "@shopify/app-bridge-react";
 import { useTranslation, Trans } from "react-i18next";
@@ -30,6 +39,7 @@ export default function HomePage() {
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
+  const [page, setPage] = useState(1);
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const [itemStrings, setItemStrings] = useState(["Sort by", `+ Add employee`]);
   // Navigate when "Add Employee" tab is clicked
@@ -39,9 +49,9 @@ export default function HomePage() {
     }
   };
 
-  const handleFetchEmployees = async () => {
+  const handleFetchEmployees = async (page = 1, limit = 50) => {
     try {
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee`;
+      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee?page=${page}&limit=${limit}`;
 
       // const payload = { employeeEmail: userEmail };
 
@@ -193,7 +203,7 @@ export default function HomePage() {
               },
             },
           ] // No actions for the first tab
-        : [
+        : index > 0 && [
             {
               type: "edit",
               content: "Edit employee",
@@ -219,34 +229,6 @@ export default function HomePage() {
           ],
   }));
 
-  // const tabs = itemStrings.map((item, index) => ({
-  //   content: item,
-  //   index,
-  //   onAction: () => {},
-  //   id: `${item}-${index}`,
-  //   isLocked: index === 0,
-  //   actions:
-  //     index === 0
-  //       ? []
-  //       : [
-  //           {
-  //             type: "edit",
-  //             onPrimaryAction: async () => {
-  //               await sleep(1);
-  //               deleteView(index);
-  //               return true;
-  //             },
-  //           },
-  //           {
-  //             type: "delete",
-  //             onPrimaryAction: async () => {
-  //               await sleep(1);
-  //               deleteView(index);
-  //               return true;
-  //             },
-  //           },
-  //         ],
-  // }));
   const [selected, setSelected] = useState(0);
   const onCreateNewView = async (value) => {
     await sleep(500);
@@ -280,19 +262,46 @@ export default function HomePage() {
   const [moneySpent, setMoneySpent] = useState(undefined);
   const [taggedWith, setTaggedWith] = useState("");
   const [queryValue, setQueryValue] = useState("");
+  const [selectedRow, setSelectedRow] = useState(null); // To track the selected row
+  const resourceName = {
+    singular: "order",
+    plural: "employees",
+  };
+  const filters = [];
 
-  const handleAccountStatusChange = useCallback(
-    (value) => setAccountStatus(value),
-    []
-  );
-  const handleMoneySpentChange = useCallback(
-    (value) => setMoneySpent(value),
-    []
-  );
-  const handleTaggedWithChange = useCallback(
-    (value) => setTaggedWith(value),
-    []
-  );
+  const appliedFilters = [];
+  const {
+    selectedResources,
+
+    allResourcesSelected,
+    handleSelectionChange,
+    resourceIDResolver,
+  } = useIndexResourceState(filteredEmployees);
+
+  const handleNextPage = () => {
+    if (employees.length === 0) {
+      setPage(1);
+      handleFetchEmployees(1);
+      return;
+    }
+    setPage((prev) => ++prev);
+    handleFetchEmployees(page);
+  };
+
+  const handlePreviousPage = () => {
+    if (employees.length === 0) {
+      setPage(1);
+      handleFetchEmployees(1);
+      return;
+    }
+    if (page > 1) {
+      setPage((prev) => --prev);
+    }
+    handleFetchEmployees(page);
+  };
+
+  console.log("state check pagniation page", page);
+
   const handleFiltersQueryChange = (value) => {
     setQueryValue(value);
     // const filter = filteredEmployees.filter((data) => data.email === value);
@@ -308,16 +317,21 @@ export default function HomePage() {
       setFilteredEmployees(filtered);
     }
   };
+
   const handleAccountStatusRemove = useCallback(
     () => setAccountStatus(undefined),
     []
   );
+
   const handleMoneySpentRemove = useCallback(
     () => setMoneySpent(undefined),
     []
   );
+
   const handleTaggedWithRemove = useCallback(() => setTaggedWith(""), []);
+
   const handleQueryValueRemove = useCallback(() => setQueryValue(""), []);
+
   const handleFiltersClearAll = useCallback(() => {
     handleAccountStatusRemove();
     handleMoneySpentRemove();
@@ -330,9 +344,6 @@ export default function HomePage() {
     handleTaggedWithRemove,
   ]);
 
-  const filters = [];
-
-  const appliedFilters = [];
   if (accountStatus && !isEmpty(accountStatus)) {
     const key = "accountStatus";
     appliedFilters.push({
@@ -358,18 +369,6 @@ export default function HomePage() {
     });
   }
 
-  const resourceName = {
-    singular: "order",
-    plural: "employees",
-  };
-
-  const {
-    selectedResources,
-    allResourcesSelected,
-    handleSelectionChange,
-    resourceIDResolver,
-  } = useIndexResourceState(filteredEmployees);
-
   function formatDate(dateString) {
     // Create a new Date object from the input string
     const date = new Date(dateString);
@@ -385,6 +384,19 @@ export default function HomePage() {
     return date.toLocaleDateString("en-GB", options);
   }
 
+  // Custom handler to allow only one selection at a time
+  // Custom handler to select only the current row
+  const handleSingleRowSelection = (id) => {
+    if (selectedRow === id) {
+      // If the same row is clicked again, deselect it
+      setSelectedRow(null);
+      handleSelectionChange([], false); // Clear all selections
+    } else {
+      // If a new row is selected, deselect previous and select the new one
+      setSelectedRow(id);
+      handleSelectionChange([id], false); // Select only this row
+    }
+  };
   const rowMarkup = filteredEmployees.map(
     (
       { _id, email, grade, userCapTotal, userCapRemain, allocatedMonth },
@@ -395,6 +407,7 @@ export default function HomePage() {
         key={_id}
         selected={selectedResources.includes(_id)}
         position={index}
+        // onClick={() => handleSingleRowSelection(_id)} // Use custom handler
       >
         {/* <IndexTable.Cell>
           <Text variant="bodyMd" fontWeight="bold" as="span">
@@ -413,7 +426,7 @@ export default function HomePage() {
       </IndexTable.Row>
     )
   );
-
+  console.log("selected", selectedEmployeeId);
   return (
     <Page fullWidth>
       <Text
@@ -473,14 +486,70 @@ export default function HomePage() {
             { title: "Available Cap" },
             { title: "Cap Allocation Month" },
           ]}
-          pagination={{
-            hasNext: true,
-            onNext: () => {},
-          }}
         >
           {rowMarkup}
         </IndexTable>
       </LegacyCard>
+      {/* Pagination Block */}
+      <div
+        style={{
+          marginTop: 10,
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 2,
+        }}
+      >
+        <button
+          style={{
+            backgroundColor: "#d4d4d4",
+            borderColor: "#d4d4d4",
+            //#C0C0C0
+            borderWidth: 0,
+            borderTopLeftRadius: 5,
+            borderBottomLeftRadius: 5,
+            cursor: "pointer", // Set cursor to pointer
+            transition: "background-color 0.3s", // Smooth transition for background color
+            paddingTop: 5,
+            paddingBottom: 5,
+          }}
+          onClick={handlePreviousPage}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+          }}
+        >
+          <Icon source={ChevronLeftIcon} />
+        </button>
+
+        <button
+          style={{
+            // width: "20%",
+            // height: "40%",
+            paddingTop: 5,
+            paddingBottom: 5,
+            backgroundColor: "#d4d4d4",
+            borderColor: "#d4d4d4",
+            borderWidth: 0,
+            borderTopRightRadius: 5,
+            borderBottomRightRadius: 5,
+            cursor: "pointer", // Set cursor to pointer
+            transition: "background-color 0.3s", // Smooth transition for background color
+          }}
+          onClick={handleNextPage}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+          }}
+        >
+          <Icon source={ChevronRightIcon} />
+        </button>
+      </div>
     </Page>
   );
   function disambiguateLabel(key) {

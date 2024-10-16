@@ -108,7 +108,7 @@ export default function EditEmployee() {
   const handleFetchEmployee = async (id) => {
     try {
       console.log("iid", id);
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee/${id}`;
+      const apiUrl = `http://localhost:5000/api/employee/${id}`;
 
       // const payload = { employeeEmail: userEmail };
 
@@ -174,7 +174,7 @@ export default function EditEmployee() {
     }
     try {
       setloading(true);
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee/${payload.state}`;
+      const apiUrl = `http://localhost:5000/api/employee/${payload.state}`;
       const response = await fetch(apiUrl, {
         method: "PATCH",
         headers: {

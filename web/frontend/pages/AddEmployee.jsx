@@ -7,7 +7,7 @@ import {
   PageActions,
   TextField,
 } from "@shopify/polaris";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function AddEmployee() {
   const [employeeData, setEmployeeData] = useState({});
@@ -132,7 +132,8 @@ export default function AddEmployee() {
     }
     try {
       setloading(true);
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee`;
+      //https://employee-discount-backend.vercel.app
+      const apiUrl = `http://localhost:5000/api/employee`;
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -158,8 +159,44 @@ export default function AddEmployee() {
       console.error("Error order discount create", error);
     }
   };
+  const fetchUserShop = async () => {
+    try {
+      const apiUrl = `/api/userShop`;
 
-  console.log("payload", employeeData);
+      // const payload = { employeeEmail: userEmail };
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          // "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json(); // Parse JSON from the response
+      console.log("dtae", data.data.myshopify_domain);
+
+      if (
+        !(
+          employeeData.hasOwnProperty("employeeAssociation") &&
+          employeeData.employeeAssociation
+        )
+      ) {
+        handleSetEmployee("employeeAssociation", data.data.myshopify_domain);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserShop();
+  }, []);
+  console.log("payloadd", employeeData);
   return (
     <div
       style={{

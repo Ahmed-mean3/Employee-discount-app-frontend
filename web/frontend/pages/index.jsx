@@ -38,6 +38,7 @@ export default function HomePage() {
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [employeeAssociation, setEmployeeAssociation] = useState(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
   const [page, setPage] = useState(1);
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -51,7 +52,7 @@ export default function HomePage() {
 
   const handleFetchEmployees = async (page = 1, limit = 50) => {
     try {
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee?page=${page}&limit=${limit}`;
+      const apiUrl = `http://localhost:5000/api/employee?page=${page}&limit=${limit}&employeeAssociation=${employeeAssociation}`;
 
       // const payload = { employeeEmail: userEmail };
 
@@ -98,7 +99,7 @@ export default function HomePage() {
     console.log("employee id", selectedEmployeeId);
     try {
       setLoading(true);
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/employee/${selectedEmployeeId}`;
+      const apiUrl = `http://localhost:5000/api/employee/${selectedEmployeeId}`;
       const response = await fetch(apiUrl, {
         method: "DELETE",
         headers: {
@@ -164,7 +165,8 @@ export default function HomePage() {
         ? [
             {
               type: "",
-              content: "Asscending (By email)",
+              content: "Asscending order",
+              helpText: "(By email)",
               onAction: () => sortBy("ascending"),
               onPrimaryAction: (value) => {
                 handleFetchEmployees();
@@ -173,7 +175,8 @@ export default function HomePage() {
             },
             {
               type: "",
-              content: "Decending (By email)",
+              content: "Decending order",
+              helpText: "(By email)",
               onAction: () => sortBy("descending"),
               onPrimaryAction: () => {
                 console.log("abc");
@@ -183,9 +186,9 @@ export default function HomePage() {
             },
             {
               type: "",
-              content: "Asscending (By available cap)",
-              helpText: "ajjaja",
-              accessibilityLabel: "ajjaja",
+              content: "Asscending order",
+              helpText: "(By available cap)",
+              // accessibilityLabel: "ajjaja",
               onAction: () => sortBy("ascending", true),
               onPrimaryAction: (value) => {
                 handleFetchEmployees();
@@ -194,7 +197,8 @@ export default function HomePage() {
             },
             {
               type: "",
-              content: "Decending (By available cap)",
+              content: "Decending order",
+              helpText: "(By available cap)",
               onAction: () => sortBy("descending", true),
               onPrimaryAction: () => {
                 console.log("abc");
@@ -426,7 +430,38 @@ export default function HomePage() {
       </IndexTable.Row>
     )
   );
-  console.log("selected", selectedEmployeeId);
+  const fetchUserShop = async () => {
+    try {
+      const apiUrl = `/api/userShop`;
+
+      // const payload = { employeeEmail: userEmail };
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          // "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json(); // Parse JSON from the response
+      console.log("dtae", data.data.myshopify_domain);
+
+      if (!employeeAssociation) {
+        setEmployeeAssociation(data.data.myshopify_domain);
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserShop();
+  }, []);
   return (
     <Page fullWidth>
       <Text

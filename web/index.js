@@ -54,7 +54,24 @@ app.get("/api/products/count", async (_req, res) => {
 
   res.status(200).send({ count: countData.data.productsCount.count });
 });
+app.get("/api/userShop", async (_req, res) => {
+  try {
+    const client = await shopify.api.rest.Shop.all({
+      session: res.locals.shopify.session,
+    });
+    console.log("sick wick", client);
 
+    res.status(200).send({
+      status: true,
+      message: "Shop Details retrieved successfully",
+      data: client.data[0],
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .send({ status: false, message: "Internal Server Error", error: error });
+  }
+});
 app.post("/api/products", async (_req, res) => {
   let status = 200;
   let error = null;

@@ -45,7 +45,7 @@ function Extension() {
   const handlePostOrderDiscount = async () => {
     try {
       setLoader(true);
-      const apiUrl = `https://employee-discount-backend.vercel.app/api/discount`;
+      const apiUrl = `http://localhost:5000/api/discount`;
 
       const payload = { employeeEmail: userEmail };
 

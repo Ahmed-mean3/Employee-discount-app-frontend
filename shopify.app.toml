@@ -3,7 +3,7 @@
 client_id = "ffd20f431622110bd86850a06288a993"
 name = "employee-discount-app"
 handle = "employee-discount-app-2"
-application_url = "https://configuration-allied-integrating-dvd.trycloudflare.com"
+application_url = "https://network-kyle-mj-rendering.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthent
 
 [auth]
 redirect_urls = [
-  "https://configuration-allied-integrating-dvd.trycloudflare.com/auth/callback",
-  "https://configuration-allied-integrating-dvd.trycloudflare.com/auth/shopify/callback",
-  "https://configuration-allied-integrating-dvd.trycloudflare.com/api/auth/callback"
+  "https://network-kyle-mj-rendering.trycloudflare.com/auth/callback",
+  "https://network-kyle-mj-rendering.trycloudflare.com/auth/shopify/callback",
+  "https://network-kyle-mj-rendering.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

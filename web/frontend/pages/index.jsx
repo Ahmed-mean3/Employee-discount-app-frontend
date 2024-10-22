@@ -14,6 +14,11 @@ import {
   Button,
   LegacyStack,
   Icon,
+  SkeletonPage,
+  Layout,
+  SkeletonBodyText,
+  TextContainer,
+  SkeletonDisplayText,
 } from "@shopify/polaris";
 import {
   ChevronLeftIcon,
@@ -51,6 +56,7 @@ export default function HomePage() {
 
   const handleFetchEmployees = async (page = 1, limit = 50) => {
     try {
+      setLoading(true);
       const apiUrl = `https://employee-discount-backend.vercel.app/api/employee?page=${page}&limit=${limit}`;
 
       // const payload = { employeeEmail: userEmail };
@@ -71,6 +77,8 @@ export default function HomePage() {
       console.log("is order discount created", data);
       setEmployees(data.data);
       setFilteredEmployees(data.data);
+      setLoading(false);
+
       // setDiscountCode(data.data.discount_code.code);
       // if (!data.status) {
       //   setDiscountMessage(data.message);
@@ -78,6 +86,7 @@ export default function HomePage() {
       //   await handleAddDiscount(data.data.discount_code.code);
       // }
     } catch (error) {
+      setLoading(false);
       console.error("Error order discount create", error);
     }
   };
@@ -438,118 +447,134 @@ export default function HomePage() {
         Manage Cambridge Employees
       </Text>
       <div style={{ marginTop: 20, marginBottom: 20 }} />
-      <LegacyCard>
-        <IndexFilters
-          // sortOptions={sortOptions}
-          // sortSelected={sortSelected}
-          queryValue={queryValue}
-          queryPlaceholder="Search employees"
-          onQueryChange={handleFiltersQueryChange}
-          onQueryClear={() => setQueryValue("")}
-          // onSort={setSortSelected}
-          // primaryAction={primaryAction}
 
-          cancelAction={{
-            onAction: onHandleCancel,
-            disabled: false,
-            loading: false,
-          }}
-          tabs={tabs}
-          selected={selected}
-          onSelect={setSelected}
-          canCreateNewView={false}
-          onCreateNewView={onCreateNewView}
-          filters={filters}
-          appliedFilters={appliedFilters}
-          onClearAll={handleFiltersClearAll}
-          mode={mode}
-          setMode={setMode}
-        />
-        <IndexTable
-          resourceName={resourceName}
-          itemCount={filteredEmployees.length}
-          selectedItemsCount={
-            allResourcesSelected ? "All" : selectedResources.length
-          }
-          // bulkActions={bulkActions}
-          // promotedBulkActions={promotedBulkActions}
-          onSelectionChange={(e, b, c) => {
-            handleSelectionChange(e, b, c);
-            setSelectedEmployeeId(c);
-            setIsSelected((prev) => !prev);
-          }}
-          headings={[
-            // { title: "Employee Id" },
-            { title: "Email" },
-            { title: "Grade" },
-            { title: "Total Cap" },
-            { title: "Available Cap" },
-            { title: "Cap Allocation Month" },
-          ]}
-        >
-          {rowMarkup}
-        </IndexTable>
-      </LegacyCard>
-      {/* Pagination Block */}
-      <div
-        style={{
-          marginTop: 10,
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 2,
-        }}
-      >
-        <button
-          style={{
-            backgroundColor: "#d4d4d4",
-            borderColor: "#d4d4d4",
-            //#C0C0C0
-            borderWidth: 0,
-            borderTopLeftRadius: 5,
-            borderBottomLeftRadius: 5,
-            cursor: "pointer", // Set cursor to pointer
-            transition: "background-color 0.3s", // Smooth transition for background color
-            paddingTop: 5,
-            paddingBottom: 5,
-          }}
-          onClick={handlePreviousPage}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
-          }}
-        >
-          <Icon source={ChevronLeftIcon} />
-        </button>
+      {loading ? (
+        <SkeletonPage primaryAction>
+          <Layout>
+            <Layout.Section>
+              <LegacyCard sectioned>
+                <SkeletonBodyText lines={6} />
+              </LegacyCard>
+            </Layout.Section>
+          </Layout>
+        </SkeletonPage>
+      ) : (
+        <>
+          {" "}
+          <LegacyCard>
+            <IndexFilters
+              // sortOptions={sortOptions}
+              // sortSelected={sortSelected}
+              queryValue={queryValue}
+              queryPlaceholder="Search employees"
+              onQueryChange={handleFiltersQueryChange}
+              onQueryClear={() => setQueryValue("")}
+              // onSort={setSortSelected}
+              // primaryAction={primaryAction}
 
-        <button
-          style={{
-            // width: "20%",
-            // height: "40%",
-            paddingTop: 5,
-            paddingBottom: 5,
-            backgroundColor: "#d4d4d4",
-            borderColor: "#d4d4d4",
-            borderWidth: 0,
-            borderTopRightRadius: 5,
-            borderBottomRightRadius: 5,
-            cursor: "pointer", // Set cursor to pointer
-            transition: "background-color 0.3s", // Smooth transition for background color
-          }}
-          onClick={handleNextPage}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
-          }}
-        >
-          <Icon source={ChevronRightIcon} />
-        </button>
-      </div>
+              cancelAction={{
+                onAction: onHandleCancel,
+                disabled: false,
+                loading: false,
+              }}
+              tabs={tabs}
+              selected={selected}
+              onSelect={setSelected}
+              canCreateNewView={false}
+              onCreateNewView={onCreateNewView}
+              filters={filters}
+              appliedFilters={appliedFilters}
+              onClearAll={handleFiltersClearAll}
+              mode={mode}
+              setMode={setMode}
+            />
+            <IndexTable
+              resourceName={resourceName}
+              itemCount={filteredEmployees.length}
+              selectedItemsCount={
+                allResourcesSelected ? "All" : selectedResources.length
+              }
+              // bulkActions={bulkActions}
+              // promotedBulkActions={promotedBulkActions}
+              onSelectionChange={(e, b, c) => {
+                handleSelectionChange(e, b, c);
+                setSelectedEmployeeId(c);
+                setIsSelected((prev) => !prev);
+              }}
+              headings={[
+                // { title: "Employee Id" },
+                { title: "Email" },
+                { title: "Grade" },
+                { title: "Total Cap" },
+                { title: "Available Cap" },
+                { title: "Cap Allocation Month" },
+              ]}
+            >
+              {rowMarkup}
+            </IndexTable>
+          </LegacyCard>
+          {/* Pagination Block */}
+          <div
+            style={{
+              marginTop: 10,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <button
+              style={{
+                backgroundColor: "#d4d4d4",
+                borderColor: "#d4d4d4",
+                //#C0C0C0
+                borderWidth: 0,
+                borderTopLeftRadius: 5,
+                borderBottomLeftRadius: 5,
+                cursor: "pointer", // Set cursor to pointer
+                transition: "background-color 0.3s", // Smooth transition for background color
+                paddingTop: 5,
+                paddingBottom: 5,
+              }}
+              onClick={handlePreviousPage}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+              }}
+            >
+              <Icon source={ChevronLeftIcon} />
+            </button>
+
+            <button
+              style={{
+                // width: "20%",
+                // height: "40%",
+                paddingTop: 5,
+                paddingBottom: 5,
+                backgroundColor: "#d4d4d4",
+                borderColor: "#d4d4d4",
+                borderWidth: 0,
+                borderTopRightRadius: 5,
+                borderBottomRightRadius: 5,
+                cursor: "pointer", // Set cursor to pointer
+                transition: "background-color 0.3s", // Smooth transition for background color
+              }}
+              onClick={handleNextPage}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+              }}
+            >
+              <Icon source={ChevronRightIcon} />
+            </button>
+          </div>
+        </>
+      )}
     </Page>
   );
   function disambiguateLabel(key) {

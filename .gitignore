@@ -23,6 +23,7 @@ dist/
 
 # extensions build output
 extensions/*/build
+extensions/checkout-ui-2/src/config/*
 
 # Node library SQLite database
 web/database.sqlite

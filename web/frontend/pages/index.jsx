@@ -47,10 +47,18 @@ export default function HomePage() {
   const [page, setPage] = useState(1);
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const [itemStrings, setItemStrings] = useState(["Sort by", `+ Add employee`]);
+  const [selectedTabIndex, setSelectedTabIndex] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
   // Navigate when "Add Employee" tab is clicked
   const handleTabAction = (index) => {
     if (index === 1) {
       navigate("/AddEmployee");
+    }
+
+    if (selectedTabIndex === null || selectedTabIndex === index) {
+      // If no tab is selected or the same tab is clicked (to unselect), toggle the selection
+      setSelectedTabIndex(selectedTabIndex === index ? null : index);
     }
   };
 
@@ -95,12 +103,14 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    if (isSelected && itemStrings.length <= 2) {
+    console.log("checkaaa", currentIndex, isSelected);
+    if (currentIndex === 1 && !isSelected) return setCurrentIndex(0);
+    if (isSelected && currentIndex === 1) {
       setItemStrings((prevStrings) => [...prevStrings, "Other Options"]);
     } else {
       setItemStrings(["Sort by", "+ Add employee"]);
     }
-  }, [isSelected]);
+  }, [isSelected, currentIndex]);
 
   const deleteEmployee = async (index) => {
     if (!selectedEmployeeId) return;
@@ -162,82 +172,6 @@ export default function HomePage() {
     setFilteredEmployees(sorted);
   };
 
-  const tabs = itemStrings.map((item, index) => ({
-    content: item,
-    index,
-    onAction: () => handleTabAction(index), // Navigation handler
-    id: `${item}-${index}`,
-    // icon: index === 1 ? <DiscountIcon /> : null, // Pass the icon here
-    actions:
-      index === 0
-        ? [
-            {
-              type: "",
-              content: "Asscending (By email)",
-              onAction: () => sortBy("ascending"),
-              onPrimaryAction: (value) => {
-                handleFetchEmployees();
-                return true;
-              },
-            },
-            {
-              type: "",
-              content: "Decending (By email)",
-              onAction: () => sortBy("descending"),
-              onPrimaryAction: () => {
-                console.log("abc");
-                setEmployees();
-                return true;
-              },
-            },
-            {
-              type: "",
-              content: "Asscending (By available cap)",
-              helpText: "ajjaja",
-              accessibilityLabel: "ajjaja",
-              onAction: () => sortBy("ascending", true),
-              onPrimaryAction: (value) => {
-                handleFetchEmployees();
-                return true;
-              },
-            },
-            {
-              type: "",
-              content: "Decending (By available cap)",
-              onAction: () => sortBy("descending", true),
-              onPrimaryAction: () => {
-                console.log("abc");
-                setEmployees();
-                return true;
-              },
-            },
-          ] // No actions for the first tab
-        : index > 0 && [
-            {
-              type: "edit",
-              content: "Edit employee",
-              onAction: () => {
-                navigate("/EditEmployee", { state: selectedEmployeeId });
-              },
-              // onPrimaryAction: async (value) => {
-              //   await editEmployee(value);
-              //   return true;
-              // },
-            },
-            {
-              type: "delete",
-              content: "Delete employee",
-              onAction: () => {
-                console.log("tasdeeq");
-              },
-              onPrimaryAction: async () => {
-                deleteEmployee(index);
-                return true;
-              },
-            },
-          ],
-  }));
-
   const [selected, setSelected] = useState(0);
   const onCreateNewView = async (value) => {
     await sleep(500);
@@ -281,12 +215,95 @@ export default function HomePage() {
   const appliedFilters = [];
   const {
     selectedResources,
-
     allResourcesSelected,
     handleSelectionChange,
     resourceIDResolver,
   } = useIndexResourceState(filteredEmployees);
+  const tabs = itemStrings.map((item, index) => ({
+    content: item,
+    index,
+    onAction: () => handleTabAction(index), // Navigation handler
+    id: `${item}-${index}`,
+    // icon: index === 1 ? <DiscountIcon /> : null, // Pass the icon here
+    actions:
+      index === 0
+        ? [
+            {
+              type: "",
+              content: "Asscending order",
+              helpText: "(By email)",
+              onAction: () => sortBy("ascending"),
+              onPrimaryAction: (value) => {
+                handleFetchEmployees();
+                return true;
+              },
+            },
+            {
+              type: "",
+              content: "Decending order",
+              helpText: "(By email)",
+              onAction: () => sortBy("descending"),
+              onPrimaryAction: () => {
+                console.log("abc");
+                setEmployees();
+                return true;
+              },
+            },
+            // {
+            //   type: "",
+            //   content: "Asscending order",
+            //   helpText: "(By available cap)",
+            //   // accessibilityLabel: "ajjaja",
+            //   onAction: () => sortBy("ascending", true),
+            //   onPrimaryAction: (value) => {
+            //     handleFetchEmployees();
+            //     return true;
+            //   },
+            // },
+            // {
+            //   type: "",
+            //   content: "Decending order",
+            //   helpText: "(By available cap)",
+            //   onAction: () => sortBy("descending", true),
+            //   onPrimaryAction: () => {
+            //     console.log("abc");
+            //     setEmployees();
+            //     return true;
+            //   },
+            // },
+          ] // No actions for the first tab
+        : index > 0 && selectedTabIndex === index
+        ? [
+            {
+              type: "edit",
+              content: "Edit employee",
 
+              onAction: () => {
+                navigate("/EditEmployee", { state: selectedEmployeeId });
+              },
+              // onPrimaryAction: async (value) => {
+              //   await editEmployee(value);
+              //   return true;
+              // },
+            },
+            {
+              type: "delete",
+              content: "Delete employee",
+              accessibilityLabel: "dinchak",
+              title: "fomo",
+              helpText: "romo",
+              destructive: true,
+              onAction: () => {
+                console.log("tasdeeq");
+              },
+              onPrimaryAction: async () => {
+                deleteEmployee(index);
+                return true;
+              },
+            },
+          ]
+        : [],
+  }));
   const handleNextPage = () => {
     if (employees.length === 0) {
       setPage(1);
@@ -497,6 +514,20 @@ export default function HomePage() {
               // bulkActions={bulkActions}
               // promotedBulkActions={promotedBulkActions}
               onSelectionChange={(e, b, c) => {
+                let ind = parseInt(c);
+                console.log("indexerrr", currentIndex);
+
+                if (currentIndex === 0) {
+                  console.log("currentIndex === null", currentIndex === null);
+                  setCurrentIndex(1);
+                } else if (ind === 2) {
+                  console.log("index === 2", ind === 2);
+                  setCurrentIndex(1);
+                } else if (b === false) {
+                  if (currentIndex > 1) setCurrentIndex((prev) => --prev);
+                } else {
+                  setCurrentIndex((prev) => ++prev);
+                }
                 handleSelectionChange(e, b, c);
                 setSelectedEmployeeId(c);
                 setIsSelected((prev) => !prev);
@@ -507,7 +538,7 @@ export default function HomePage() {
                 { title: "Grade" },
                 { title: "Total Cap" },
                 { title: "Available Cap" },
-                { title: "Cap Allocation Month" },
+                { title: "Cap Allocation Date" },
               ]}
             >
               {rowMarkup}

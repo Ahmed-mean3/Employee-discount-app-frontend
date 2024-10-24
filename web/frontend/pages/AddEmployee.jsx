@@ -22,7 +22,41 @@ export default function AddEmployee() {
   const [emailValidationMesage, setEmailValidationMesage] = useState(null);
   const [selected, setSelected] = useState("1");
   const [bannerVisible, setBannerVisible] = useState(true);
+  const defaultListStyle = {
+    marginTop: "10px",
+    // marginBottom: "20px",
+    fontSize: "12px",
+    color: "gray",
+    fontWeight: "500",
+    marginLeft: "2px",
+  };
+  const [items_two, setItems_two] = useState([
+    "Order Discount - amount off order",
+    "Automatically applies when clicked on apply employee discount at checkout",
+    "Upon clicking on prior button, it first create discount then applies on employees checkout items.",
+  ]);
+  const [items, setItems] = useState([
+    "For Online Store",
+    "No minimum purchase requirement",
+    "Can’t combine with other discounts",
+    "Limit of 1 use",
+  ]);
+  const addItem_two = (newItem) => {
+    setItems_two([...items, newItem]);
+  };
+  const addItem = (newItem) => {
+    setItems_two([...items, newItem]);
+  };
 
+  const bulletStyle = {
+    display: "inline-block",
+    // width: "1em",
+    textAlign: "center",
+    marginRight: "0.5em",
+    fontSize: "1.2em", // Increase font size for a thicker appearance
+    color: "black",
+    fontWeight: "bold", // Make the bullet bolder
+  };
   const handleSelectChange = useCallback((value) => {
     setBannerVisible(true);
     setSelected(value);
@@ -130,6 +164,11 @@ export default function AddEmployee() {
         setEmailValidationMesage(null);
       }
     }
+    // if (!employeeData.email.includes("@cambridge")) {
+    //   return setEmailValidationMesage("Invalid email");
+    // } else {
+    //   setEmailValidationMesage(null);
+    // }
 
     if (!employeeData.email) {
       setEmployeeEmailError(true);
@@ -137,18 +176,18 @@ export default function AddEmployee() {
     } else {
       setEmployeeEmailError(false);
     }
-    if (!employeeData.grade) {
-      setEmployeeGradeError(true);
-      return;
-    } else {
-      setEmployeeGradeError(false);
-    }
-    if (!employeeData.userCapTotal) {
-      setEmployeeCapError(true);
-      return;
-    } else {
-      setEmployeeCapError(false);
-    }
+    // if (!employeeData.grade) {
+    //   setEmployeeGradeError(true);
+    //   return;
+    // } else {
+    //   setEmployeeGradeError(false);
+    // }
+    // if (!employeeData.userCapTotal) {
+    //   setEmployeeCapError(true);
+    //   return;
+    // } else {
+    //   setEmployeeCapError(false);
+    // }
 
     if (!employeeData.grade) {
       employeeData.grade = "1";
@@ -214,38 +253,44 @@ export default function AddEmployee() {
   return (
     <div
       style={{
-        width: "50%",
-        marginLeft: 30,
-        marginTop: 30,
+        display: "flex",
+        flexDirection: "row",
+        width: "100%",
+        gap: "20px",
+        paddingLeft: 20,
+        paddingRight: 20,
+        marginTop: 10,
       }}
     >
-      <LegacyCard>
-        <Page
-          fullWidth
-          backAction={{
-            content: "Settings",
-            onAction: () => window.history.back(), // Or change to the correct URL
-          }}
-          title="Create an employee"
-        >
-          <FormLayout>
-            {/* <FormLayout.Group> */}
-            <TextField
-              type="email"
-              label="Enter Email"
-              value={employeeData.email || ""}
-              onChange={(value) => handleSetEmployee("email", value)}
-              autoComplete="off"
-              error={
-                employeeEmailError
-                  ? "Email required."
-                  : emailValidationMesage !== null
-                  ? emailValidationMesage
-                  : ""
-              }
-            />
+      {/* Employee add form */}
+      <div style={{ width: "70%" }}>
+        <LegacyCard>
+          <Page
+            fullWidth
+            backAction={{
+              content: "Settings",
+              onAction: () => window.history.back(), // Or change to the correct URL
+            }}
+            title="Create an employee"
+          >
+            <FormLayout>
+              {/* <FormLayout.Group> */}
+              <TextField
+                type="email"
+                label="Enter Email"
+                value={employeeData.email || ""}
+                onChange={(value) => handleSetEmployee("email", value)}
+                autoComplete="off"
+                error={
+                  employeeEmailError
+                    ? "Email required."
+                    : emailValidationMesage !== null
+                    ? emailValidationMesage
+                    : ""
+                }
+              />
 
-            {/* <TextField
+              {/* <TextField
               type="number"
               label="Enter Grade"
               value={employeeData.grade}
@@ -260,27 +305,27 @@ export default function AddEmployee() {
               }
             /> */}
 
-            <Select
-              label="Select Job Grade"
-              options={options}
-              onChange={handleSelectChange}
-              value={selected}
-              // error={
-              //   employeeGradeError
-              // Grade required
+              <Select
+                label="Select Job Grade"
+                options={options}
+                onChange={handleSelectChange}
+                value={selected}
+                // error={
+                //   employeeGradeError
+                // Grade required
 
-              // }
-            />
-            {bannerVisible && (
-              <Banner
-                title="Allotable Discount Cap"
-                onDismiss={() => setBannerVisible(false)}
-              >
-                <p>{getGradeToDiscount(parseInt(selected))} /=</p>
-              </Banner>
-            )}
+                // }
+              />
+              {bannerVisible && (
+                <Banner
+                  title="Allotable Discount Cap"
+                  onDismiss={() => setBannerVisible(false)}
+                >
+                  <p>{getGradeToDiscount(parseInt(selected))} /=</p>
+                </Banner>
+              )}
 
-            {/* <TextField
+              {/* <TextField
               type="number"
               label="User Total Cap"
               value={employeeData.userCapTotal}
@@ -288,17 +333,87 @@ export default function AddEmployee() {
               autoComplete="off"
               error={employeeCapError ? "Cap required." : ""}
             /> */}
-            {/* </FormLayout.Group> */}
-          </FormLayout>
-          <PageActions
-            primaryAction={{
-              loading: loading,
-              content: "Save employee",
-              onAction: () => handlePostEmployee(),
-            }}
-          />
-        </Page>
-      </LegacyCard>
+              {/* </FormLayout.Group> */}
+            </FormLayout>
+            <PageActions
+              primaryAction={{
+                loading: loading,
+                content: "Save employee",
+                onAction: () => handlePostEmployee(),
+              }}
+            />
+          </Page>
+        </LegacyCard>
+      </div>
+
+      {/* Details Card */}
+      <div
+        style={{
+          width: "30%",
+          height: "40%",
+          // flex: 1,
+          padding: 10,
+          borderColor: "#FFFFFF",
+          borderRadius: "10px",
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #FFFFFF",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Adds shadow effect
+          // position: "fixed",
+          // alignContent: "flex-end",
+          // alignSelf: "self-end", // Ensure it stays at the top
+        }}
+      >
+        <span style={{ fontSize: "14px", fontWeight: "500", color: "black" }}>
+          Summary
+        </span>
+
+        <div
+          style={{
+            marginTop: 10,
+            marginBottom: 20,
+            fontSize: "12px",
+            color: "gray",
+            fontWeight: "500",
+          }}
+        >
+          35% Employee Discount is given from thier available cap.
+          {/* {newDiscountCode ? newDiscountCode : "No discount code yet"} */}
+        </div>
+        <span style={{ fontSize: "14px", fontWeight: "500", color: "black" }}>
+          Type and method
+        </span>
+        <div style={defaultListStyle}>
+          <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+            {items_two.map((item, index) => (
+              <li
+                key={index}
+                style={{ display: "flex", alignItems: "flex-start" }}
+              >
+                <span style={bulletStyle}>•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          {/* <button onClick={() => addItem("New Point")}>Add Point</button> */}
+        </div>
+        <span style={{ fontSize: "14px", fontWeight: "500", color: "black" }}>
+          Details
+        </span>
+        <div style={defaultListStyle}>
+          <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+            {items.map((item, index) => (
+              <li
+                key={index}
+                style={{ display: "flex", alignItems: "flex-start" }}
+              >
+                <span style={bulletStyle}>•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          {/* <button onClick={() => addItem_two("New Point")}>Add Point</button> */}
+        </div>
+      </div>
     </div>
   );
 }

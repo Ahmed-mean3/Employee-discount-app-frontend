@@ -6,10 +6,12 @@
   "scripts": {
     "shopify": "shopify",
     "build": "shopify app build",
-    "dev": "shopify app dev",
+    "dev": "cross-env EMPLOYEE_APP_BACKEND_KEY=anb*3kW npm run env:setup && npm run config:use dev && shopify app dev",
     "info": "shopify app info",
     "generate": "shopify app generate",
-    "deploy": "shopify app deploy"
+    "deploy": "shopify app deploy",
+    "env:setup": "cross-env bash ./setup_ui_extension_environment.sh",
+    "config:use": "echo 'Using development configuration'"
   },
   "dependencies": {
     "@shopify/polaris-icons": "^9.3.0"
@@ -20,5 +22,8 @@
     "extensions/*",
     "web",
     "web/frontend"
-  ]
+  ],
+  "devDependencies": {
+    "cross-env": "^7.0.3"
+  }
 }

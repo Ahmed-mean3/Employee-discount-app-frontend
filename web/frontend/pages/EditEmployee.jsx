@@ -1,13 +1,15 @@
 import {
   AlphaCard,
+  Banner,
   Card,
   FormLayout,
   LegacyCard,
   Page,
   PageActions,
+  Select,
   TextField,
 } from "@shopify/polaris";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export default function EditEmployee() {
@@ -21,6 +23,56 @@ export default function EditEmployee() {
   const [maxCap, setMaxCap] = useState(false);
   const [maxGrade, setMaxGrade] = useState(false);
   const [emailValidationMesage, setEmailValidationMesage] = useState(null);
+  const [selected, setSelected] = useState("1");
+  const [bannerVisible, setBannerVisible] = useState(true);
+
+  const [items_two, setItems_two] = useState([
+    "Order Discount - amount off order",
+    "Automatically applies when clicked on apply employee discount at checkout",
+    "Upon clicking on prior button, it first create discount then applies on employees checkout items.",
+  ]);
+  const [items, setItems] = useState([
+    "For Online Store",
+    "No minimum purchase requirement",
+    "Can’t combine with other discounts",
+    "Limit of 1 use",
+  ]);
+  const addItem_two = (newItem) => {
+    setItems_two([...items, newItem]);
+  };
+  const addItem = (newItem) => {
+    setItems_two([...items, newItem]);
+  };
+  const options = [
+    { label: "OG1 & OG2", value: "1" },
+    { label: "M1", value: "2" },
+    { label: "M2", value: "3" },
+    { label: "M3 & M4", value: "4" },
+    { label: "M5 & M6", value: "5" },
+    { label: "M7 & M8", value: "6" },
+  ];
+  const bulletStyle = {
+    display: "inline-block",
+    // width: "1em",
+    textAlign: "center",
+    marginRight: "0.5em",
+    fontSize: "1.2em", // Increase font size for a thicker appearance
+    color: "black",
+    fontWeight: "bold", // Make the bullet bolder
+  };
+  const defaultListStyle = {
+    marginTop: "10px",
+    // marginBottom: "20px",
+    fontSize: "12px",
+    color: "gray",
+    fontWeight: "500",
+    marginLeft: "2px",
+  };
+  const handleSelectChange = useCallback((value) => {
+    setBannerVisible(true);
+    setSelected(value);
+    handleSetEmployee("grade", value);
+  }, []);
   function checkEmailValidity(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -100,9 +152,9 @@ export default function EditEmployee() {
     if (employeeData.grade) {
       setEmployeeGradeError(false);
     }
-    if (employeeData.userCapTotal) {
-      setEmployeeCapError(false);
-    }
+    // if (employeeData.userCapTotal) {
+    //   setEmployeeCapError(false);
+    // }
   };
 
   const handleFetchEmployee = async (id) => {
@@ -166,12 +218,13 @@ export default function EditEmployee() {
     } else {
       setEmployeeGradeError(false);
     }
-    if (!employeeData.userCapTotal) {
-      setEmployeeCapError(true);
-      return;
-    } else {
-      setEmployeeCapError(false);
-    }
+    // if (!employeeData.userCapTotal) {
+    //   setEmployeeCapError(true);
+    //   return;
+    // } else {
+    //   setEmployeeCapError(false);
+    // }
+    delete employeeData.userCapTotal;
     try {
       setloading(true);
       const apiUrl = `https://employee-discount-backend.vercel.app/api/employee/${payload.state}`;
@@ -200,75 +253,197 @@ export default function EditEmployee() {
       console.error("Error order discount create", error);
     }
   };
+  function getGradeToDiscount(grade) {
+    let totalCap;
 
+    switch (grade) {
+      case 1:
+        totalCap = 5000; // 5% totalCap for grade 10
+        break;
+      case 2:
+        totalCap = 10000;
+        break;
+      case 3:
+        totalCap = 20000;
+        break;
+      case 4:
+        totalCap = 30000;
+        break;
+      case 5:
+        totalCap = 40000;
+        break;
+      case 6:
+        totalCap = 50000;
+        break;
+      default:
+        totalCap = 0; // 0% totalCap for invalid or unlisted grades
+        break;
+    }
+
+    return totalCap;
+  }
   console.log("payload", employeeData);
   return (
     <div
       style={{
-        width: "50%",
-        marginLeft: 30,
-        marginTop: 30,
+        display: "flex",
+        flexDirection: "row",
+        width: "100%",
+        gap: "20px",
+        paddingLeft: 20,
+        paddingRight: 20,
+        marginTop: 10,
       }}
     >
-      <LegacyCard>
-        <Page
-          fullWidth
-          backAction={{
-            content: "Settings",
-            onAction: () => window.history.back(), // Or change to the correct URL
-          }}
-          title="Edit an employee"
-        >
-          <FormLayout>
-            {/* <FormLayout.Group> */}
-            <TextField
-              type="email"
-              label="Enter Email"
-              value={employeeData.email || ""}
-              onChange={(value) => handleSetEmployee("email", value)}
-              autoComplete="off"
-              error={
-                employeeEmailError
-                  ? "Email required."
-                  : emailValidationMesage !== null
-                  ? emailValidationMesage
-                  : ""
-              }
-            />
-
-            <TextField
-              type="number"
-              label="Enter Grade"
-              value={employeeData.grade}
-              onChange={(value) => handleSetEmployee("grade", value)}
-              autoComplete="off"
-              error={
-                employeeGradeError
-                  ? "Grade required."
-                  : maxGrade
-                  ? "This is the maximum grade you can assign to employee."
-                  : ""
-              }
-            />
-            <TextField
-              type="number"
-              label="User Total Cap"
-              value={employeeData.userCapTotal}
-              onChange={(value) => handleSetEmployee("userCapTotal", value)}
-              autoComplete="off"
-              error={employeeCapError ? "Cap required." : ""}
-            />
-            {/* </FormLayout.Group> */}
-          </FormLayout>
-          <PageActions
-            primaryAction={{
-              loading: loading,
-              content: "Save employee",
-              onAction: () => handleEditEmployee(),
+      {/* Employee add form */}
+      <div style={{ width: "70%" }}>
+        <LegacyCard>
+          <Page
+            fullWidth
+            backAction={{
+              content: "Settings",
+              onAction: () => window.history.back(), // Or change to the correct URL
             }}
-          />
-        </Page>
-      </LegacyCard>
+            title="Edit an employee"
+          >
+            <FormLayout>
+              {/* <FormLayout.Group> */}
+              <TextField
+                type="email"
+                label="Enter Email"
+                value={employeeData.email || ""}
+                onChange={(value) => handleSetEmployee("email", value)}
+                autoComplete="off"
+                error={
+                  employeeEmailError
+                    ? "Email required."
+                    : emailValidationMesage !== null
+                    ? emailValidationMesage
+                    : ""
+                }
+              />
+              <Select
+                label="Select Job Grade"
+                options={options}
+                onChange={handleSelectChange}
+                value={selected}
+                // error={
+                //   employeeGradeError
+                // Grade required
+
+                // }
+              />
+
+              {bannerVisible && (
+                <Banner
+                  title="Allotable Discount Cap"
+                  onDismiss={() => setBannerVisible(false)}
+                >
+                  <p>{getGradeToDiscount(parseInt(employeeData.grade))} /=</p>
+                </Banner>
+              )}
+              {/* <TextField
+                type="number"
+                label="Enter Grade"
+                value={employeeData.grade}
+                onChange={(value) => handleSetEmployee("grade", value)}
+                autoComplete="off"
+                error={
+                  employeeGradeError
+                    ? "Grade required."
+                    : maxGrade
+                    ? "This is the maximum grade you can assign to employee."
+                    : ""
+                }
+              /> */}
+              {/* <TextField
+                type="number"
+                label="User Total Cap"
+                value={employeeData.userCapTotal}
+                onChange={(value) => handleSetEmployee("userCapTotal", value)}
+                autoComplete="off"
+                error={employeeCapError ? "Cap required." : ""}
+              /> */}
+              {/* </FormLayout.Group> */}
+            </FormLayout>
+            <PageActions
+              primaryAction={{
+                loading: loading,
+                content: "Save employee",
+                onAction: () => handleEditEmployee(),
+              }}
+            />
+          </Page>
+        </LegacyCard>
+      </div>
+      {/* Details Card */}
+      <div
+        style={{
+          width: "30%",
+          height: "40%",
+          // flex: 1,
+          padding: 10,
+          borderColor: "#FFFFFF",
+          borderRadius: "10px",
+          backgroundColor: "#FFFFFF",
+          border: "1px solid #FFFFFF",
+          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Adds shadow effect
+          // position: "fixed",
+          // alignContent: "flex-end",
+          // alignSelf: "self-end", // Ensure it stays at the top
+        }}
+      >
+        <span style={{ fontSize: "14px", fontWeight: "500", color: "black" }}>
+          Summary
+        </span>
+
+        <div
+          style={{
+            marginTop: 10,
+            marginBottom: 20,
+            fontSize: "12px",
+            color: "gray",
+            fontWeight: "500",
+          }}
+        >
+          35% Employee Discount is given from thier available cap.
+          {/* {newDiscountCode ? newDiscountCode : "No discount code yet"} */}
+        </div>
+        <span style={{ fontSize: "14px", fontWeight: "500", color: "black" }}>
+          Type and method
+        </span>
+        <div style={defaultListStyle}>
+          <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+            {items_two.map((item, index) => (
+              <li
+                key={index}
+                style={{ display: "flex", alignItems: "flex-start" }}
+              >
+                <span style={bulletStyle}>•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          {/* <button onClick={() => addItem("New Point")}>Add Point</button> */}
+        </div>
+        <span style={{ fontSize: "14px", fontWeight: "500", color: "black" }}>
+          Details
+        </span>
+        <div style={defaultListStyle}>
+          <ul style={{ listStyleType: "none", paddingLeft: 0 }}>
+            {items.map((item, index) => (
+              <li
+                key={index}
+                style={{ display: "flex", alignItems: "flex-start" }}
+              >
+                <span style={bulletStyle}>•</span>
+                {item}
+              </li>
+            ))}
+          </ul>
+          {/* <button onClick={() => addItem_two("New Point")}>Add Point</button> */}
+        </div>
+      </div>
     </div>
   );
 }

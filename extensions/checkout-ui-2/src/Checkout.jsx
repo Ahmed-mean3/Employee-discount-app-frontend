@@ -10,9 +10,12 @@ import {
   useEmail,
   Text,
   BlockStack,
+  useSubtotalAmount,
 } from "@shopify/ui-extensions-react/checkout";
 import axios from "axios";
 import { useState } from "react";
+import { EMPLOYEE_APP_BACKEND_KEY } from "./config/config";
+
 // 1. Choose an extension target
 export default reactExtension(
   "purchase.checkout.reductions.render-after",
@@ -24,9 +27,10 @@ function Extension() {
   const instructions = useInstructions();
   const applyDiscountCodeChange = useApplyDiscountCodeChange();
   const userEmail = useEmail();
+  const subtotal = useSubtotalAmount();
   const [discountMessage, setDiscountMessage] = useState("");
   const [loader, setLoader] = useState(false);
-
+  console.log("tim tim", EMPLOYEE_APP_BACKEND_KEY);
   const handleAddDiscount = async (code) => {
     const result = await applyDiscountCodeChange({
       type: "addDiscountCode",
@@ -47,12 +51,15 @@ function Extension() {
       setLoader(true);
       const apiUrl = `https://employee-discount-backend.vercel.app/api/discount`;
 
-      const payload = { employeeEmail: userEmail };
-
+      const payload = {
+        employeeEmail: userEmail,
+        totalShoppingAmount: subtotal.amount,
+      };
+      console.log("payload check", payload);
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
-          "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
+          "api-key": `${EMPLOYEE_APP_BACKEND_KEY}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload), // Convert the payload to JSON
@@ -77,7 +84,7 @@ function Extension() {
       console.error("Error order discount create", error);
     }
   };
-
+  console.log("user email", userEmail);
   // 2. Render a UI
   return (
     <View layout="fill">

@@ -36,6 +36,8 @@ import { trophyImage } from "../assets";
 import { ProductsCard } from "../components";
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { use } from "i18next";
+import DeleteViewModal from "../components/DeleteModal";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -139,8 +141,10 @@ export default function HomePage() {
         //hanlde error condition
       }
       setLoading(false);
+      setOpen(false);
     } catch (error) {
       setLoading(false);
+      setOpen(false);
       console.error("Error order discount create", error);
     }
   };
@@ -206,6 +210,9 @@ export default function HomePage() {
   const [taggedWith, setTaggedWith] = useState("");
   const [queryValue, setQueryValue] = useState("");
   const [selectedRow, setSelectedRow] = useState(null); // To track the selected row
+  const [open, setOpen] = useState(false);
+  const [onClose, setOnClose] = useState(false);
+  const [deleteIndex, setDeleteIndex] = useState(null);
   const resourceName = {
     singular: "order",
     plural: "employees",
@@ -228,33 +235,11 @@ export default function HomePage() {
     actions:
       index === 0
         ? [
-            {
-              type: "",
-              content: "Asscending order",
-              helpText: "(By email)",
-              onAction: () => sortBy("ascending"),
-              onPrimaryAction: (value) => {
-                handleFetchEmployees();
-                return true;
-              },
-            },
-            {
-              type: "",
-              content: "Decending order",
-              helpText: "(By email)",
-              onAction: () => sortBy("descending"),
-              onPrimaryAction: () => {
-                console.log("abc");
-                setEmployees();
-                return true;
-              },
-            },
             // {
             //   type: "",
             //   content: "Asscending order",
-            //   helpText: "(By available cap)",
-            //   // accessibilityLabel: "ajjaja",
-            //   onAction: () => sortBy("ascending", true),
+            //   helpText: "(By email)",
+            //   onAction: () => sortBy("ascending"),
             //   onPrimaryAction: (value) => {
             //     handleFetchEmployees();
             //     return true;
@@ -263,20 +248,42 @@ export default function HomePage() {
             // {
             //   type: "",
             //   content: "Decending order",
-            //   helpText: "(By available cap)",
-            //   onAction: () => sortBy("descending", true),
+            //   helpText: "(By email)",
+            //   onAction: () => sortBy("descending"),
             //   onPrimaryAction: () => {
             //     console.log("abc");
             //     setEmployees();
             //     return true;
             //   },
             // },
+            {
+              type: "",
+              content: "Asscending order",
+              helpText: "(By available cap)",
+              // accessibilityLabel: "ajjaja",
+              onAction: () => sortBy("ascending", true),
+              onPrimaryAction: (value) => {
+                handleFetchEmployees();
+                return true;
+              },
+            },
+            {
+              type: "",
+              content: "Decending order",
+              helpText: "(By available cap)",
+              onAction: () => sortBy("descending", true),
+              onPrimaryAction: () => {
+                console.log("abc");
+                setEmployees();
+                return true;
+              },
+            },
           ] // No actions for the first tab
         : index > 0 && selectedTabIndex === index
         ? [
             {
-              type: "edit",
-              content: "Edit employee",
+              type: "",
+              content: "✏️ Edit employee",
 
               onAction: () => {
                 navigate("/EditEmployee", { state: selectedEmployeeId });
@@ -287,19 +294,21 @@ export default function HomePage() {
               // },
             },
             {
-              type: "delete",
-              content: "Delete employee",
-              accessibilityLabel: "dinchak",
-              title: "fomo",
-              helpText: "romo",
-              destructive: true,
+              type: "",
+              content: `🗑️ Delete employee`,
+              // accessibilityLabel: "dinchak",
+              // title: "fomo",
+              // helpText: "romo",
+              // destructive: true,
               onAction: () => {
-                console.log("tasdeeq");
+                setOpen(true);
+                console.log("tasdeeqw2");
+                setDeleteIndex(index);
               },
-              onPrimaryAction: async () => {
-                deleteEmployee(index);
-                return true;
-              },
+              // onPrimaryAction: async () => {
+              //   deleteEmployee(index);
+              //   return true;
+              // },
             },
           ]
         : [],
@@ -606,6 +615,12 @@ export default function HomePage() {
           </div>
         </>
       )}
+
+      <DeleteViewModal
+        open={open}
+        onClose={() => setOpen(false)}
+        _handleDelete={() => deleteEmployee(deleteIndex)}
+      />
     </Page>
   );
   function disambiguateLabel(key) {

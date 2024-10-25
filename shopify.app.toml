@@ -3,7 +3,7 @@
 client_id = "ffd20f431622110bd86850a06288a993"
 name = "employee-discount-app"
 handle = "employee-discount-app-2"
-application_url = "https://graduate-shows-valentine-workshops.trycloudflare.com"
+application_url = "https://hd-advert-tourist-adverse.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthent
 
 [auth]
 redirect_urls = [
-  "https://graduate-shows-valentine-workshops.trycloudflare.com/auth/callback",
-  "https://graduate-shows-valentine-workshops.trycloudflare.com/auth/shopify/callback",
-  "https://graduate-shows-valentine-workshops.trycloudflare.com/api/auth/callback"
+  "https://hd-advert-tourist-adverse.trycloudflare.com/auth/callback",
+  "https://hd-advert-tourist-adverse.trycloudflare.com/auth/shopify/callback",
+  "https://hd-advert-tourist-adverse.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

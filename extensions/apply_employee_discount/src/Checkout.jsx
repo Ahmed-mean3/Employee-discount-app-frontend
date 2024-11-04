@@ -31,6 +31,7 @@ function Extension() {
   const [discountMessage, setDiscountMessage] = useState("");
   const [loader, setLoader] = useState(false);
   console.log("tim tim", EMPLOYEE_APP_BACKEND_KEY);
+  const [check, setCheck] = useState(false);
   const handleAddDiscount = async (code) => {
     const result = await applyDiscountCodeChange({
       type: "addDiscountCode",
@@ -91,6 +92,7 @@ function Extension() {
       {userEmail !== undefined && (
         <BlockStack>
           <Button
+            // disabled={check}
             loading={loader}
             width="100%"
             onPress={handlePostOrderDiscount}

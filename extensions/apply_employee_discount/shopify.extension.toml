@@ -6,7 +6,7 @@
 api_version = "2024-10"
 
 [[extensions]]
-name = "checkout-ui-2"
+name = "apply_employee_discount"
 handle = "checkout-ui-2"
 type = "ui_extension"
 

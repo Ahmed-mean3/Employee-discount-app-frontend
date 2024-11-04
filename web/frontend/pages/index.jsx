@@ -456,7 +456,7 @@ export default function HomePage() {
             {userCapTotal}
           </Text>
         </IndexTable.Cell>
-        <IndexTable.Cell>{userCapRemain}</IndexTable.Cell>
+        <IndexTable.Cell>{Math.trunc(userCapRemain)}</IndexTable.Cell>
         <IndexTable.Cell>{formatDate(allocatedMonth)}</IndexTable.Cell>
       </IndexTable.Row>
     )

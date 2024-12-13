@@ -3,7 +3,7 @@
 client_id = "ffd20f431622110bd86850a06288a993"
 name = "employee-discount-app"
 handle = "employee-discount-app-2"
-application_url = "https://twiki-texas-germany-institution.trycloudflare.com"
+application_url = "https://taylor-md-atm-antonio.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthent
 
 [auth]
 redirect_urls = [
-  "https://twiki-texas-germany-institution.trycloudflare.com/auth/callback",
-  "https://twiki-texas-germany-institution.trycloudflare.com/auth/shopify/callback",
-  "https://twiki-texas-germany-institution.trycloudflare.com/api/auth/callback"
+  "https://taylor-md-atm-antonio.trycloudflare.com/auth/callback",
+  "https://taylor-md-atm-antonio.trycloudflare.com/auth/shopify/callback",
+  "https://taylor-md-atm-antonio.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

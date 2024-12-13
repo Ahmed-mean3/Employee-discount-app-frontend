@@ -164,11 +164,11 @@ export default function AddEmployee() {
         setEmailValidationMesage(null);
       }
     }
-    // if (!employeeData.email.includes("@cambridge")) {
-    //   return setEmailValidationMesage("Invalid email");
-    // } else {
-    //   setEmailValidationMesage(null);
-    // }
+    if (!employeeData.email.includes("@cambridge")) {
+      return setEmailValidationMesage("Invalid email, only cambridge employees can be added.");
+    } else {
+      setEmailValidationMesage(null);
+    }
 
     if (!employeeData.email) {
       setEmployeeEmailError(true);
@@ -285,8 +285,8 @@ export default function AddEmployee() {
                   employeeEmailError
                     ? "Email required."
                     : emailValidationMesage !== null
-                    ? emailValidationMesage
-                    : ""
+                      ? emailValidationMesage
+                      : ""
                 }
               />
 
@@ -310,11 +310,11 @@ export default function AddEmployee() {
                 options={options}
                 onChange={handleSelectChange}
                 value={selected}
-                // error={
-                //   employeeGradeError
-                // Grade required
+              // error={
+              //   employeeGradeError
+              // Grade required
 
-                // }
+              // }
               />
               {bannerVisible && (
                 <Banner

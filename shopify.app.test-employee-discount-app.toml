@@ -3,23 +3,22 @@
 client_id = "073e3629717691f45681e38ff78048f0"
 name = "test-employee-discount-app"
 handle = "test-employee-discount-app"
-application_url = "https://heavy-exterior-temporary-accomplish.trycloudflare.com"
+application_url = "https://whole-ciao-forecasts-allocated.trycloudflare.com"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = "store-for-customer-account-test.myshopify.com"
-include_config_on_deploy = true
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = ""
+scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthenticated_read_checkouts,unauthenticated_write_checkouts,write_customers,write_discounts,write_price_rules,write_products"
 
 [auth]
 redirect_urls = [
-  "https://heavy-exterior-temporary-accomplish.trycloudflare.com/auth/callback",
-  "https://heavy-exterior-temporary-accomplish.trycloudflare.com/auth/shopify/callback",
-  "https://heavy-exterior-temporary-accomplish.trycloudflare.com/api/auth/callback"
+  "https://whole-ciao-forecasts-allocated.trycloudflare.com/auth/callback",
+  "https://whole-ciao-forecasts-allocated.trycloudflare.com/auth/shopify/callback",
+  "https://whole-ciao-forecasts-allocated.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

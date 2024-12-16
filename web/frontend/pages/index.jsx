@@ -53,9 +53,7 @@ export default function HomePage() {
   const handleFetchEmployees = async (page = 1, limit = 50) => {
     try {
       const apiUrl = `http://localhost:5000/api/employee?page=${page}&limit=${limit}&employeeAssociation=${employeeAssociation}`;
-
       // const payload = { employeeEmail: userEmail };
-
       const response = await fetch(apiUrl, {
         headers: {
           "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
@@ -69,7 +67,7 @@ export default function HomePage() {
       }
 
       const data = await response.json(); // Parse JSON from the response
-      console.log("is order discount created", data);
+      console.log("fetching employees", data);
       setEmployees(data.data);
       setFilteredEmployees(data.data);
       // setDiscountCode(data.data.discount_code.code);
@@ -83,8 +81,9 @@ export default function HomePage() {
     }
   };
   useEffect(() => {
+    if (!employeeAssociation) return;
     handleFetchEmployees();
-  }, []);
+  }, [employeeAssociation]);
 
   useEffect(() => {
     if (isSelected && itemStrings.length <= 2) {
@@ -163,74 +162,74 @@ export default function HomePage() {
     actions:
       index === 0
         ? [
-            {
-              type: "",
-              content: "Asscending order",
-              helpText: "(By email)",
-              onAction: () => sortBy("ascending"),
-              onPrimaryAction: (value) => {
-                handleFetchEmployees();
-                return true;
-              },
+          {
+            type: "",
+            content: "Asscending order",
+            helpText: "(By email)",
+            onAction: () => sortBy("ascending"),
+            onPrimaryAction: (value) => {
+              handleFetchEmployees();
+              return true;
             },
-            {
-              type: "",
-              content: "Decending order",
-              helpText: "(By email)",
-              onAction: () => sortBy("descending"),
-              onPrimaryAction: () => {
-                console.log("abc");
-                setEmployees();
-                return true;
-              },
+          },
+          {
+            type: "",
+            content: "Decending order",
+            helpText: "(By email)",
+            onAction: () => sortBy("descending"),
+            onPrimaryAction: () => {
+              console.log("abc");
+              setEmployees();
+              return true;
             },
-            {
-              type: "",
-              content: "Asscending order",
-              helpText: "(By available cap)",
-              // accessibilityLabel: "ajjaja",
-              onAction: () => sortBy("ascending", true),
-              onPrimaryAction: (value) => {
-                handleFetchEmployees();
-                return true;
-              },
+          },
+          {
+            type: "",
+            content: "Asscending order",
+            helpText: "(By available cap)",
+            // accessibilityLabel: "ajjaja",
+            onAction: () => sortBy("ascending", true),
+            onPrimaryAction: (value) => {
+              handleFetchEmployees();
+              return true;
             },
-            {
-              type: "",
-              content: "Decending order",
-              helpText: "(By available cap)",
-              onAction: () => sortBy("descending", true),
-              onPrimaryAction: () => {
-                console.log("abc");
-                setEmployees();
-                return true;
-              },
+          },
+          {
+            type: "",
+            content: "Decending order",
+            helpText: "(By available cap)",
+            onAction: () => sortBy("descending", true),
+            onPrimaryAction: () => {
+              console.log("abc");
+              setEmployees();
+              return true;
             },
-          ] // No actions for the first tab
+          },
+        ] // No actions for the first tab
         : index > 0 && [
-            {
-              type: "edit",
-              content: "Edit employee",
-              onAction: () => {
-                navigate("/EditEmployee", { state: selectedEmployeeId });
-              },
-              // onPrimaryAction: async (value) => {
-              //   await editEmployee(value);
-              //   return true;
-              // },
+          {
+            type: "edit",
+            content: "Edit employee",
+            onAction: () => {
+              navigate("/EditEmployee", { state: selectedEmployeeId });
             },
-            {
-              type: "delete",
-              content: "Delete employee",
-              onAction: () => {
-                console.log("tasdeeq");
-              },
-              onPrimaryAction: async () => {
-                deleteEmployee(index);
-                return true;
-              },
+            // onPrimaryAction: async (value) => {
+            //   await editEmployee(value);
+            //   return true;
+            // },
+          },
+          {
+            type: "delete",
+            content: "Delete employee",
+            onAction: () => {
+              console.log("tasdeeq");
             },
-          ],
+            onPrimaryAction: async () => {
+              deleteEmployee(index);
+              return true;
+            },
+          },
+        ],
   }));
 
   const [selected, setSelected] = useState(0);
@@ -241,7 +240,7 @@ export default function HomePage() {
   };
 
   const { mode, setMode } = useSetIndexFiltersMode();
-  const onHandleCancel = () => {};
+  const onHandleCancel = () => { };
 
   const onHandleSave = async () => {
     await sleep(1);
@@ -251,17 +250,17 @@ export default function HomePage() {
   const primaryAction =
     selected === 0
       ? {
-          type: "save-as",
-          onAction: onCreateNewView,
-          disabled: false,
-          loading: false,
-        }
+        type: "save-as",
+        onAction: onCreateNewView,
+        disabled: false,
+        loading: false,
+      }
       : {
-          type: "save",
-          onAction: onHandleSave,
-          disabled: false,
-          loading: false,
-        };
+        type: "save",
+        onAction: onHandleSave,
+        disabled: false,
+        loading: false,
+      };
   const [accountStatus, setAccountStatus] = useState(undefined);
   const [moneySpent, setMoneySpent] = useState(undefined);
   const [taggedWith, setTaggedWith] = useState("");
@@ -411,7 +410,7 @@ export default function HomePage() {
         key={_id}
         selected={selectedResources.includes(_id)}
         position={index}
-        // onClick={() => handleSingleRowSelection(_id)} // Use custom handler
+      // onClick={() => handleSingleRowSelection(_id)} // Use custom handler
       >
         {/* <IndexTable.Cell>
           <Text variant="bodyMd" fontWeight="bold" as="span">
@@ -458,9 +457,39 @@ export default function HomePage() {
       console.log("error", error);
     }
   };
+  const saveCredentials = async () => {
+    try {
+      const apiUrl = `/api/credentials`;
+
+      // const payload = { employeeEmail: userEmail };
+
+      const response = await fetch(apiUrl, {
+        headers: {
+          // "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Check if the response is ok (status in the range 200-299)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response}`);
+      }
+
+      const data = await response.json(); // Parse JSON from the response
+      console.log("check save credentials", data);
+
+      // if (!employeeAssociation) {
+      //   setEmployeeAssociation(data.data.myshopify_domain);
+      // }
+    } catch (error) {
+      console.log("error", error);
+    }
+  };
+
 
   useEffect(() => {
     fetchUserShop();
+    saveCredentials();
   }, []);
   return (
     <Page fullWidth>

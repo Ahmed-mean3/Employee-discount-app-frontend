@@ -3,7 +3,7 @@
 client_id = "073e3629717691f45681e38ff78048f0"
 name = "test-employee-discount-app"
 handle = "test-employee-discount-app"
-application_url = "https://whole-ciao-forecasts-allocated.trycloudflare.com"
+application_url = "https://programmer-searches-strength-discount.trycloudflare.com"
 embedded = true
 
 [build]
@@ -16,9 +16,9 @@ scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthent
 
 [auth]
 redirect_urls = [
-  "https://whole-ciao-forecasts-allocated.trycloudflare.com/auth/callback",
-  "https://whole-ciao-forecasts-allocated.trycloudflare.com/auth/shopify/callback",
-  "https://whole-ciao-forecasts-allocated.trycloudflare.com/api/auth/callback"
+  "https://programmer-searches-strength-discount.trycloudflare.com/auth/callback",
+  "https://programmer-searches-strength-discount.trycloudflare.com/auth/shopify/callback",
+  "https://programmer-searches-strength-discount.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

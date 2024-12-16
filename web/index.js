@@ -3,11 +3,19 @@ import { join } from "path";
 import { readFileSync } from "fs";
 import express from "express";
 import serveStatic from "serve-static";
-
+import mongoose from "mongoose";
+import dotenv from "dotenv";
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
 import PrivacyWebhookHandlers from "./privacy.js";
 
+import StoreSchema from "./mongoSchema.js";
+import crypto from "crypto";
+
+dotenv.config();
+
+const algorithm = "aes-256-ctr"; // Encryption algorithm
+const secretKey = process.env.SECRET_KEY; // Store securely in env variables
 const PORT = parseInt(
   process.env.BACKEND_PORT || process.env.PORT || "3000",
   10
@@ -19,7 +27,49 @@ const STATIC_PATH =
     : `${process.cwd()}/frontend/`;
 
 const app = express();
+const Hash = {
+  encrypt: (text) => {
+    if (!text || typeof text !== "string") {
+      throw new Error("Invalid text to encrypt");
+    }
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(
+      algorithm,
+      // @ts-ignore
+      Buffer.from(secretKey, "hex"),
+      iv
+    );
+    const encrypted = Buffer.concat([cipher.update(text), cipher.final()]);
+    return JSON.stringify({
+      iv: iv.toString("hex"),
+      content: encrypted.toString("hex"),
+    });
+  },
 
+  decrypt: (hash) => {
+    if (!hash || typeof hash !== "string") {
+      throw new Error("Invalid hash to decrypt");
+    }
+    let parsedHash;
+    try {
+      parsedHash = JSON.parse(hash);
+    } catch {
+      throw new Error("Invalid JSON format for hash");
+    }
+
+    const decipher = crypto.createDecipheriv(
+      algorithm,
+      // @ts-ignore
+      Buffer.from(secretKey, "hex"),
+      Buffer.from(parsedHash.iv, "hex")
+    );
+    const decrypted = Buffer.concat([
+      decipher.update(Buffer.from(parsedHash.content, "hex")),
+      decipher.final(),
+    ]);
+    return decrypted.toString();
+  },
+};
 // Set up Shopify authentication and webhook handling
 app.get(shopify.config.auth.path, shopify.auth.begin());
 app.get(
@@ -34,7 +84,11 @@ app.post(
 
 // If you are adding routes outside of the /api path, remember to
 // also add a proxy rule for them in web/frontend/vite.config.js
-console.log("checkup of keys", process.env.SHOPIFY_API_KEY);
+// console.log(
+//   "checkup of keys",
+//   process.env.SHOPIFY_API_KEY,
+//   process.env.SHOPIFY_MONGO_URI_MULTI_STORE_APP
+// );
 app.use("/api/*", shopify.validateAuthenticatedSession());
 
 app.use(express.json());
@@ -54,12 +108,92 @@ app.get("/api/products/count", async (_req, res) => {
 
   res.status(200).send({ count: countData.data.productsCount.count });
 });
+app.get("/api/credentials", async (_req, res) => {
+  try {
+    const session = res.locals.shopify.session;
+    const { accessToken, shop } = session;
+
+    // Validate session and environment variables
+    if (!process.env.SHOPIFY_API_KEY || !accessToken || !shop) {
+      throw new Error("Missing required session or environment data");
+    }
+
+    console.log(
+      "Session before encryption:",
+      process.env.SHOPIFY_API_KEY,
+      accessToken
+    );
+
+    // Encrypt the credentials
+    const encryptedApiKey = Hash.encrypt(process.env.SHOPIFY_API_KEY);
+    const encryptedApiSecret = Hash.encrypt(accessToken);
+
+    console.log(
+      "Encrypted API Key and Secret:",
+      encryptedApiKey,
+      encryptedApiSecret
+    );
+
+    // Check if shop entry exists
+    const existingStore = await StoreSchema.findOne({ shopName: shop });
+
+    if (existingStore) {
+      // Shop exists; check if keys are different
+      if (
+        existingStore.apiKey !== encryptedApiKey ||
+        existingStore.apiSecret !== encryptedApiSecret
+      ) {
+        // Update credentials
+        existingStore.apiKey = encryptedApiKey;
+        existingStore.apiSecret = encryptedApiSecret;
+        await existingStore.save();
+
+        console.log("Updated credentials:", existingStore);
+
+        return res.status(200).send({
+          status: true,
+          message: "Credentials updated successfully",
+        });
+      }
+
+      // No changes needed
+      console.log("No changes required for the existing credentials.");
+      return res.status(200).send({
+        status: true,
+        message: "No changes required. Credentials are up-to-date.",
+      });
+    }
+
+    // If shop does not exist, create a new entry
+    const store = new StoreSchema({
+      apiKey: encryptedApiKey,
+      apiSecret: encryptedApiSecret,
+      shopName: shop,
+    });
+
+    await store.save();
+
+    console.log("Saved new credentials:", store);
+
+    res.status(200).send({
+      status: true,
+      message: "Credentials saved successfully",
+    });
+  } catch (error) {
+    console.error("Error saving credentials:", error);
+    res.status(500).send({
+      status: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+});
+
 app.get("/api/userShop", async (_req, res) => {
   try {
     const client = await shopify.api.rest.Shop.all({
       session: res.locals.shopify.session,
     });
-    console.log("sick wick", client);
 
     res.status(200).send({
       status: true,
@@ -89,6 +223,7 @@ app.post("/api/products", async (_req, res) => {
 app.use(shopify.cspHeaders());
 app.use(serveStatic(STATIC_PATH, { index: false }));
 
+// @ts-ignore
 app.use("/*", shopify.ensureInstalledOnShop(), async (_req, res, _next) => {
   return res
     .status(200)
@@ -100,4 +235,17 @@ app.use("/*", shopify.ensureInstalledOnShop(), async (_req, res, _next) => {
     );
 });
 
-app.listen(PORT);
+mongoose
+  .connect(`${process.env.SHOPIFY_MONGO_URI_MULTI_STORE_APP}`)
+  .then(() => {
+    app.listen(process.env.PORT || PORT, () => {
+      console.log(
+        `Database Connected Successfully and server is listening on this port ${
+          process.env.PORT || PORT
+        }`
+      );
+    });
+  })
+  .catch((err) => {
+    console.log(err);
+  });

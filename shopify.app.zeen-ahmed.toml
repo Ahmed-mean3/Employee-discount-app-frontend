@@ -1,0 +1,33 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "65b6f3a795c6bc61bf9d51f899e8b24e"
+name = "zeen_ahmed"
+handle = "zeen_ahmed"
+application_url = "https://syndrome-salary-veterans-survive.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "habitt-international-mean3.myshopify.com"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthenticated_read_checkouts,unauthenticated_write_checkouts,write_customers,write_discounts,write_price_rules,write_products"
+
+[auth]
+redirect_urls = [
+  "https://syndrome-salary-veterans-survive.trycloudflare.com/auth/callback",
+  "https://syndrome-salary-veterans-survive.trycloudflare.com/auth/shopify/callback",
+  "https://syndrome-salary-veterans-survive.trycloudflare.com/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2024-07"
+
+[app_proxy]
+url = "https://syndrome-salary-veterans-survive.trycloudflare.com/myApp"
+subpath = "proxy"
+prefix = "apps"
+
+[pos]
+embedded = false

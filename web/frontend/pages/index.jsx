@@ -14,6 +14,9 @@ import {
   Button,
   LegacyStack,
   Icon,
+  Layout,
+  SkeletonBodyText,
+  SkeletonPage,
 } from "@shopify/polaris";
 import {
   ChevronLeftIcon,
@@ -23,21 +26,26 @@ import {
   PlusIcon,
 } from "@shopify/polaris-icons";
 
-import { TitleBar } from "@shopify/app-bridge-react";
+import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { useTranslation, Trans } from "react-i18next";
 
 import { trophyImage } from "../assets";
 
 import { ProductsCard } from "../components";
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get current path
+  const path = location.pathname;
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isFetchedEmployees, setIsFetchedEmployees] = useState(false);
   const [employeeAssociation, setEmployeeAssociation] = useState(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
   const [page, setPage] = useState(1);
@@ -52,7 +60,8 @@ export default function HomePage() {
 
   const handleFetchEmployees = async (page = 1, limit = 50) => {
     try {
-      const apiUrl = `http://localhost:5000/api/employee?page=${page}&limit=${limit}&employeeAssociation=${employeeAssociation}`;
+      setIsFetchedEmployees(true)
+      const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee?page=${page}&limit=${limit}&employeeAssociation=${employeeAssociation}`;
       // const payload = { employeeEmail: userEmail };
       const response = await fetch(apiUrl, {
         headers: {
@@ -70,6 +79,8 @@ export default function HomePage() {
       console.log("fetching employees", data);
       setEmployees(data.data);
       setFilteredEmployees(data.data);
+      setIsFetchedEmployees(false)
+
       // setDiscountCode(data.data.discount_code.code);
       // if (!data.status) {
       //   setDiscountMessage(data.message);
@@ -77,6 +88,9 @@ export default function HomePage() {
       //   await handleAddDiscount(data.data.discount_code.code);
       // }
     } catch (error) {
+      setIsFetchedEmployees(false)
+
+
       console.error("Error order discount create", error);
     }
   };
@@ -98,7 +112,7 @@ export default function HomePage() {
     console.log("employee id", selectedEmployeeId);
     try {
       setLoading(true);
-      const apiUrl = `http://localhost:5000/api/employee/${selectedEmployeeId}`;
+      const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee/${selectedEmployeeId}`;
       const response = await fetch(apiUrl, {
         method: "DELETE",
         headers: {
@@ -316,7 +330,7 @@ export default function HomePage() {
       setFilteredEmployees(employees);
     } else {
       // Filter the full list of discounts based on the current input value
-      const filtered = employees.filter((data) => data.email.includes(value));
+      const filtered = employees.filter((data) => data.email.toLowerCase().includes(value.toLowerCase()));
       setFilteredEmployees(filtered);
     }
   };
@@ -459,6 +473,8 @@ export default function HomePage() {
   };
   const saveCredentials = async () => {
     try {
+      const fullUrl = window.location.href;
+      console.log('sddjjs', path);
       const apiUrl = `/api/credentials`;
 
       // const payload = { employeeEmail: userEmail };
@@ -501,119 +517,148 @@ export default function HomePage() {
       >
         Manage Cambridge Employees
       </Text>
-      <div style={{ marginTop: 20, marginBottom: 20 }} />
-      <LegacyCard>
-        <IndexFilters
-          // sortOptions={sortOptions}
-          // sortSelected={sortSelected}
-          queryValue={queryValue}
-          queryPlaceholder="Search employees"
-          onQueryChange={handleFiltersQueryChange}
-          onQueryClear={() => setQueryValue("")}
-          // onSort={setSortSelected}
-          // primaryAction={primaryAction}
 
-          cancelAction={{
-            onAction: onHandleCancel,
-            disabled: false,
-            loading: false,
-          }}
-          tabs={tabs}
-          selected={selected}
-          onSelect={setSelected}
-          canCreateNewView={false}
-          onCreateNewView={onCreateNewView}
-          filters={filters}
-          appliedFilters={appliedFilters}
-          onClearAll={handleFiltersClearAll}
-          mode={mode}
-          setMode={setMode}
-        />
-        <IndexTable
-          resourceName={resourceName}
-          itemCount={filteredEmployees.length}
-          selectedItemsCount={
-            allResourcesSelected ? "All" : selectedResources.length
-          }
-          // bulkActions={bulkActions}
-          // promotedBulkActions={promotedBulkActions}
-          onSelectionChange={(e, b, c) => {
-            handleSelectionChange(e, b, c);
-            setSelectedEmployeeId(c);
-            setIsSelected((prev) => !prev);
-          }}
-          headings={[
-            // { title: "Employee Id" },
-            { title: "Email" },
-            { title: "Grade" },
-            { title: "Total Cap" },
-            { title: "Available Cap" },
-            { title: "Cap Allocation Month" },
-          ]}
-        >
-          {rowMarkup}
-        </IndexTable>
-      </LegacyCard>
-      {/* Pagination Block */}
-      <div
-        style={{
-          marginTop: 10,
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 2,
-        }}
-      >
-        <button
-          style={{
-            backgroundColor: "#d4d4d4",
-            borderColor: "#d4d4d4",
-            //#C0C0C0
-            borderWidth: 0,
-            borderTopLeftRadius: 5,
-            borderBottomLeftRadius: 5,
-            cursor: "pointer", // Set cursor to pointer
-            transition: "background-color 0.3s", // Smooth transition for background color
-            paddingTop: 5,
-            paddingBottom: 5,
-          }}
-          onClick={handlePreviousPage}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
-          }}
-        >
-          <Icon source={ChevronLeftIcon} />
-        </button>
+      {
+        isFetchedEmployees ? <SkeletonPage primaryAction>
+          <Layout>
+            <Layout.Section>
+              <LegacyCard sectioned>
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+                <SkeletonBodyText />
+              </LegacyCard>
+            </Layout.Section>
+          </Layout>
+        </SkeletonPage> : <>
 
-        <button
-          style={{
-            // width: "20%",
-            // height: "40%",
-            paddingTop: 5,
-            paddingBottom: 5,
-            backgroundColor: "#d4d4d4",
-            borderColor: "#d4d4d4",
-            borderWidth: 0,
-            borderTopRightRadius: 5,
-            borderBottomRightRadius: 5,
-            cursor: "pointer", // Set cursor to pointer
-            transition: "background-color 0.3s", // Smooth transition for background color
-          }}
-          onClick={handleNextPage}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
-          }}
-        >
-          <Icon source={ChevronRightIcon} />
-        </button>
-      </div>
+          <div style={{ marginTop: 20, marginBottom: 20 }} />
+          <LegacyCard>
+            <IndexFilters
+              // sortOptions={sortOptions}
+              // sortSelected={sortSelected}
+              queryValue={queryValue}
+              queryPlaceholder="Search employees"
+              onQueryChange={handleFiltersQueryChange}
+              onQueryClear={() => setQueryValue("")}
+              // onSort={setSortSelected}
+              // primaryAction={primaryAction}
+
+              cancelAction={{
+                onAction: onHandleCancel,
+                disabled: false,
+                loading: false,
+              }}
+              tabs={tabs}
+              selected={selected}
+              onSelect={setSelected}
+              canCreateNewView={false}
+              onCreateNewView={onCreateNewView}
+              filters={filters}
+              appliedFilters={appliedFilters}
+              onClearAll={handleFiltersClearAll}
+              mode={mode}
+              setMode={setMode}
+            />
+            <IndexTable
+              resourceName={resourceName}
+              itemCount={filteredEmployees.length}
+              selectedItemsCount={
+                allResourcesSelected ? "All" : selectedResources.length
+              }
+              // bulkActions={bulkActions}
+              // promotedBulkActions={promotedBulkActions}
+              onSelectionChange={(e, b, c) => {
+                handleSelectionChange(e, b, c);
+                setSelectedEmployeeId(c);
+                setIsSelected((prev) => !prev);
+              }}
+              headings={[
+                // { title: "Employee Id" },
+                { title: "Email" },
+                { title: "Grade" },
+                { title: "Total Cap" },
+                { title: "Available Cap" },
+                { title: "Cap Allocation Month" },
+              ]}
+            >
+              {rowMarkup}
+            </IndexTable>
+          </LegacyCard>
+
+          <div
+            style={{
+              marginTop: 10,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <button
+              style={{
+                backgroundColor: "#d4d4d4",
+                borderColor: "#d4d4d4",
+                //#C0C0C0
+                borderWidth: 0,
+                borderTopLeftRadius: 5,
+                borderBottomLeftRadius: 5,
+                cursor: "pointer", // Set cursor to pointer
+                transition: "background-color 0.3s", // Smooth transition for background color
+                paddingTop: 5,
+                paddingBottom: 5,
+              }}
+              onClick={handlePreviousPage}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+              }}
+            >
+              <Icon source={ChevronLeftIcon} />
+            </button>
+
+            <button
+              style={{
+                // width: "20%",
+                // height: "40%",
+                paddingTop: 5,
+                paddingBottom: 5,
+                backgroundColor: "#d4d4d4",
+                borderColor: "#d4d4d4",
+                borderWidth: 0,
+                borderTopRightRadius: 5,
+                borderBottomRightRadius: 5,
+                cursor: "pointer", // Set cursor to pointer
+                transition: "background-color 0.3s", // Smooth transition for background color
+              }}
+              onClick={handleNextPage}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+              }}
+            >
+              <Icon source={ChevronRightIcon} />
+            </button>
+          </div>
+
+        </>
+      }
+
     </Page>
   );
   function disambiguateLabel(key) {

@@ -1,4 +1,4 @@
-// @ts-check
+// @ts-nocheck
 import { join } from "path";
 import { readFileSync } from "fs";
 import express from "express";
@@ -110,9 +110,33 @@ app.get("/api/products/count", async (_req, res) => {
 });
 app.get("/api/credentials", async (_req, res) => {
   try {
+    const client = new shopify.api.clients.Graphql({
+      session: res.locals.shopify.session,
+    });
+
     const session = res.locals.shopify.session;
     const { accessToken, shop } = session;
 
+    // Fetch shop data
+    const data = await client.query({
+      data: {
+        query: `
+              query {
+                app{
+    appStoreAppUrl
+    appStoreDeveloperUrl
+    title
+  }
+              }
+            `,
+      },
+    });
+    console.log("checkouos", data.body.data.app);
+
+    if (data?.body?.data?.app?.title) {
+      dotenv.config({ path: `./.env.${data?.body?.data?.app?.title}` });
+    }
+    // res.status(200).send(data.body.data.shop);
     // Validate session and environment variables
     if (!process.env.SHOPIFY_API_KEY || !accessToken || !shop) {
       throw new Error("Missing required session or environment data");

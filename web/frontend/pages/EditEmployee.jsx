@@ -108,7 +108,7 @@ export default function EditEmployee() {
   const handleFetchEmployee = async (id) => {
     try {
       console.log("iid", id);
-      const apiUrl = `http://localhost:5000/api/employee/${id}`;
+      const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee/${id}`;
 
       // const payload = { employeeEmail: userEmail };
 
@@ -174,7 +174,7 @@ export default function EditEmployee() {
     }
     try {
       setloading(true);
-      const apiUrl = `http://localhost:5000/api/employee/${payload.state}`;
+      const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee/${payload.state}`;
       const response = await fetch(apiUrl, {
         method: "PATCH",
         headers: {
@@ -231,8 +231,8 @@ export default function EditEmployee() {
                 employeeEmailError
                   ? "Email required."
                   : emailValidationMesage !== null
-                  ? emailValidationMesage
-                  : ""
+                    ? emailValidationMesage
+                    : ""
               }
             />
 
@@ -246,8 +246,8 @@ export default function EditEmployee() {
                 employeeGradeError
                   ? "Grade required."
                   : maxGrade
-                  ? "This is the maximum grade you can assign to employee."
-                  : ""
+                    ? "This is the maximum grade you can assign to employee."
+                    : ""
               }
             />
             <TextField

@@ -133,7 +133,7 @@ export default function AddEmployee() {
     try {
       setloading(true);
       //https://employee-discount-backend.vercel.app
-      const apiUrl = `http://localhost:5000/api/employee`;
+      const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee`;
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -226,8 +226,8 @@ export default function AddEmployee() {
                 employeeEmailError
                   ? "Email required."
                   : emailValidationMesage !== null
-                  ? emailValidationMesage
-                  : ""
+                    ? emailValidationMesage
+                    : ""
               }
             />
 
@@ -241,8 +241,8 @@ export default function AddEmployee() {
                 employeeGradeError
                   ? "Grade required."
                   : maxGrade
-                  ? "This is the maximum grade you can assign to employee."
-                  : ""
+                    ? "This is the maximum grade you can assign to employee."
+                    : ""
               }
             />
             <TextField

@@ -45,14 +45,14 @@ function Extension() {
   const handlePostOrderDiscount = async () => {
     try {
       setLoader(true);
-      const apiUrl = `http://localhost:5000/api/discount`;
+      const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/discount`;
 
-      const payload = { employeeEmail: userEmail };
+      const payload = { employeeEmail: userEmail, employeeAssociation: "store-for-customer-account-test.myshopify.com" };
 
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
-          "api-key": `${process.env.EMPLOYEE_APP_BACKEND_KEY}`,
+          "api-key": `anb*3kW`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload), // Convert the payload to JSON

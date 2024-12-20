@@ -17,12 +17,20 @@ import {
   Layout,
   SkeletonBodyText,
   SkeletonPage,
+  SkeletonDisplayText,
+  SkeletonThumbnail,
+  TextContainer,
+  SkeletonTabs,
+  Link,
+  IndexFiltersMode,
 } from "@shopify/polaris";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   DeleteIcon,
+  DiscountFilledIcon,
   DiscountIcon,
+  PersonFilledIcon,
   PlusIcon,
 } from "@shopify/polaris-icons";
 
@@ -50,7 +58,43 @@ export default function HomePage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
   const [page, setPage] = useState(1);
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const [itemStrings, setItemStrings] = useState(["Sort by", `+ Add employee`]);
+  const [itemStrings, setItemStrings] = useState(["Sort by"]);
+  const [sortSelected, setSortSelected] = useState(['cap asc']);
+  const sortOptions = [
+    { label: 'Avalalble Cap', value: 'cap asc', directionLabel: 'Ascending' },
+    { label: 'Avalalble Cap', value: 'cap desc', directionLabel: 'Descending' },
+    { label: 'Email', value: 'email asc', directionLabel: 'A-Z' },
+    { label: 'Email', value: 'email desc', directionLabel: 'Z-A' },
+  ];
+  var { mode, setMode } = useSetIndexFiltersMode(IndexFiltersMode.Filtering);
+  useEffect(() => {
+    console.log('sort selected', sortSelected);
+
+
+    switch (sortSelected[0]) {
+      case "cap asc":
+        sortBy("ascending")
+        break;
+      case "cap desc":
+        sortBy("descending")
+        break;
+      case "email asc":
+        sortBy("ascending", true)
+        break;
+      case "email desc":
+        sortBy("descending", true)
+        break;
+      default:
+        break;
+    }
+    // // if(sortSelected[0] === "cap asc"){
+    // //   sortBy("ascending")
+    // // }
+    // // else if(sortSelected[0] === "cap desc"){
+    // //   sortBy("descending")
+    // // }
+    // else if ()
+  }, [sortSelected]);
   // Navigate when "Add Employee" tab is clicked
   const handleTabAction = (index) => {
     if (index === 1) {
@@ -60,7 +104,7 @@ export default function HomePage() {
 
   const handleFetchEmployees = async (page = 1, limit = 50) => {
     try {
-      setIsFetchedEmployees(true)
+      // setIsFetchedEmployees(true);
       const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee?page=${page}&limit=${limit}&employeeAssociation=${employeeAssociation}`;
       // const payload = { employeeEmail: userEmail };
       const response = await fetch(apiUrl, {
@@ -76,10 +120,10 @@ export default function HomePage() {
       }
 
       const data = await response.json(); // Parse JSON from the response
-      console.log("fetching employees", data);
+      // console.log("fetching employees", data);
       setEmployees(data.data);
       setFilteredEmployees(data.data);
-      setIsFetchedEmployees(false)
+      setIsFetchedEmployees(false);
 
       // setDiscountCode(data.data.discount_code.code);
       // if (!data.status) {
@@ -88,8 +132,7 @@ export default function HomePage() {
       //   await handleAddDiscount(data.data.discount_code.code);
       // }
     } catch (error) {
-      setIsFetchedEmployees(false)
-
+      setIsFetchedEmployees(false);
 
       console.error("Error order discount create", error);
     }
@@ -103,7 +146,7 @@ export default function HomePage() {
     if (isSelected && itemStrings.length <= 2) {
       setItemStrings((prevStrings) => [...prevStrings, "Other Options"]);
     } else {
-      setItemStrings(["Sort by", "+ Add employee"]);
+      setItemStrings(["Sort by"]);
     }
   }, [isSelected]);
 
@@ -253,7 +296,7 @@ export default function HomePage() {
     setSelected(itemStrings.length);
   };
 
-  const { mode, setMode } = useSetIndexFiltersMode();
+  // const { mode, setMode } = useSetIndexFiltersMode();
   const onHandleCancel = () => { };
 
   const onHandleSave = async () => {
@@ -264,10 +307,7 @@ export default function HomePage() {
   const primaryAction =
     selected === 0
       ? {
-        type: "save-as",
-        onAction: onCreateNewView,
-        disabled: false,
-        loading: false,
+
       }
       : {
         type: "save",
@@ -280,13 +320,87 @@ export default function HomePage() {
   const [taggedWith, setTaggedWith] = useState("");
   const [queryValue, setQueryValue] = useState("");
   const [selectedRow, setSelectedRow] = useState(null); // To track the selected row
+  const [currencyCode, setCurrencyCode] = useState("");
   const resourceName = {
     singular: "order",
     plural: "employees",
   };
-  const filters = [];
+  const handleMoneySpentChange = useCallback(
+    (value) => setMoneySpent(value),
+    [],
+  );
+  const handleAccountStatusChange = useCallback(
+    (value) => setAccountStatus(value),
+    [],
+  );
+  const handleTaggedWithChange = useCallback(
+    (value) => setTaggedWith(value),
+    [],
+  );
+  const filters = [
+    {
+      key: 'accountStatus',
+      label: 'Account status',
+      filter: (
+        <ChoiceList
+          title="Account status"
+          titleHidden
+          choices={[
+            { label: 'Enabled', value: 'enabled' },
+            { label: 'Not invited', value: 'not invited' },
+            { label: 'Invited', value: 'invited' },
+            { label: 'Declined', value: 'declined' },
+          ]}
+          selected={accountStatus || []}
+          onChange={handleAccountStatusChange}
+          allowMultiple
+        />
+      ),
+      shortcut: true,
+    },
+    {
+      key: 'taggedWith',
+      label: 'Tagged with',
+      filter: (
+        <TextField
+          label="Tagged with"
+          value={taggedWith}
+          onChange={handleTaggedWithChange}
+          autoComplete="off"
+          labelHidden
+        />
+      ),
+      shortcut: true,
+    },
+    {
+      key: 'moneySpent',
+      label: 'Money spent',
+      filter: (
+        <RangeSlider
+          label="Money spent is between"
+          labelHidden
+          value={moneySpent || [0, 500]}
+          prefix="$"
+          output
+          min={0}
+          max={2000}
+          step={1}
+          onChange={handleMoneySpentChange}
+        />
+      ),
+    },
+  ];
 
-  const appliedFilters = [];
+  const appliedFilters =
+    taggedWith && !isEmpty(taggedWith)
+      ? [
+        {
+          key: 'taggedWith',
+          label: disambiguateLabel('taggedWith', taggedWith),
+          onRemove: handleTaggedWithRemove,
+        },
+      ]
+      : [];
   const {
     selectedResources,
 
@@ -317,7 +431,7 @@ export default function HomePage() {
     handleFetchEmployees(page);
   };
 
-  console.log("state check pagniation page", page);
+  // console.log("state check pagniation page", page);
 
   const handleFiltersQueryChange = (value) => {
     setQueryValue(value);
@@ -330,7 +444,9 @@ export default function HomePage() {
       setFilteredEmployees(employees);
     } else {
       // Filter the full list of discounts based on the current input value
-      const filtered = employees.filter((data) => data.email.toLowerCase().includes(value.toLowerCase()));
+      const filtered = employees.filter((data) =>
+        data.email.toLowerCase().includes(value.toLowerCase())
+      );
       setFilteredEmployees(filtered);
     }
   };
@@ -416,7 +532,15 @@ export default function HomePage() {
   };
   const rowMarkup = filteredEmployees.map(
     (
-      { _id, email, grade, userCapTotal, userCapRemain, allocatedMonth },
+      {
+        _id,
+        email,
+        discountValue,
+        userCapTotal,
+        userCapRemain,
+        allocatedMonth,
+        discountType,
+      },
       index
     ) => (
       <IndexTable.Row
@@ -431,20 +555,29 @@ export default function HomePage() {
             {order}
           </Text>
         </IndexTable.Cell> */}
-        <IndexTable.Cell>{email}</IndexTable.Cell>
-        <IndexTable.Cell>{grade}</IndexTable.Cell>
+        <Link monochrome
+          removeUnderline onClick={() => navigate("/EditEmployee", { state: selectedEmployeeId })}><IndexTable.Cell>{email}</IndexTable.Cell></Link>
+        <IndexTable.Cell>
+          {discountValue}
+          {discountType.toLowerCase() === "percentage" ? " %" : " /="}
+        </IndexTable.Cell>
         <IndexTable.Cell>
           <Text as="span" numeric>
+            {currencyCode + " "}
             {userCapTotal}
           </Text>
         </IndexTable.Cell>
-        <IndexTable.Cell>{userCapRemain}</IndexTable.Cell>
+        <IndexTable.Cell>
+          {currencyCode + " "}
+          {userCapRemain}
+        </IndexTable.Cell>
         <IndexTable.Cell>{formatDate(allocatedMonth)}</IndexTable.Cell>
       </IndexTable.Row>
     )
   );
   const fetchUserShop = async () => {
     try {
+      setIsFetchedEmployees(true);
       const apiUrl = `/api/userShop`;
 
       // const payload = { employeeEmail: userEmail };
@@ -462,7 +595,7 @@ export default function HomePage() {
       }
 
       const data = await response.json(); // Parse JSON from the response
-      console.log("dtae", data.data.myshopify_domain);
+      // console.log("dtae", data.data.myshopify_domain);
 
       if (!employeeAssociation) {
         setEmployeeAssociation(data.data.myshopify_domain);
@@ -474,7 +607,7 @@ export default function HomePage() {
   const saveCredentials = async () => {
     try {
       const fullUrl = window.location.href;
-      console.log('sddjjs', path);
+      // console.log('sddjjs', path);
       const apiUrl = `/api/credentials`;
 
       // const payload = { employeeEmail: userEmail };
@@ -492,7 +625,7 @@ export default function HomePage() {
       }
 
       const data = await response.json(); // Parse JSON from the response
-      console.log("check save credentials", data);
+      // console.log("check save credentials", data);
 
       // if (!employeeAssociation) {
       //   setEmployeeAssociation(data.data.myshopify_domain);
@@ -502,58 +635,91 @@ export default function HomePage() {
     }
   };
 
+  const handleGetShopInfo = async () => {
+    // setIsLoading(true);
 
+    await fetch("api/shop/currency", { method: "GET" })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json(); // Assuming the response is in JSON format
+      })
+      .then((data) => {
+        // console.log("checker shop info:", data); // This will log the fetched products
+
+        setCurrencyCode(
+          data.currencyFormats.moneyFormat.split("{{amount}}")[0]
+        );
+      })
+      .catch((error) => {
+        // setIsLoading(false);
+        console.log("error fetching shop info:", error);
+      });
+  };
   useEffect(() => {
     fetchUserShop();
+    handleGetShopInfo();
     saveCredentials();
   }, []);
   return (
     <Page fullWidth>
-      <Text
-        element="h2"
-        variant="headingXl"
-        fontWeight="semibold"
-        alignment="center"
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 10,
+        }}
       >
-        Manage Cambridge Employees
-      </Text>
+        <Text
+          element="h2"
+          variant="headingXl"
+          fontWeight="semibold"
+          alignment="center"
+        >
+          Manage Cambridge Employees
+        </Text>
+        <div
+          style={{ alignSelf: "flex-end", display: "flex", marginBottom: 10 }}
+        >
+          <Button
+            icon={PersonFilledIcon}
+            onClick={() => navigate("/AddEmployee")}
+          >
+            Add Employee
+          </Button>
+        </div>
+      </div>
 
-      {
-        isFetchedEmployees ? <SkeletonPage primaryAction>
-          <Layout>
-            <Layout.Section>
-              <LegacyCard sectioned>
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-                <SkeletonBodyText />
-              </LegacyCard>
-            </Layout.Section>
-          </Layout>
-        </SkeletonPage> : <>
-
-          <div style={{ marginTop: 20, marginBottom: 20 }} />
+      {isFetchedEmployees ? (
+        <>
+          <LegacyCard sectioned>
+            <div style={{ display: "flex", justifyContent: "space-between", alignContent: 'center', marginBottom: 5 }}>
+              <SkeletonThumbnail size="small" />
+              <SkeletonThumbnail size="small" />
+            </div>
+            <SkeletonTabs fitted={false} count={5} />
+            <div style={{ marginBottom: 10 }} />
+            <SkeletonBodyText lines={7} />
+          </LegacyCard>
+        </>
+      ) : (
+        <>
           <LegacyCard>
             <IndexFilters
-              // sortOptions={sortOptions}
-              // sortSelected={sortSelected}
+              sortOptions={sortOptions}
+              sortSelected={sortSelected}
               queryValue={queryValue}
               queryPlaceholder="Search employees"
               onQueryChange={handleFiltersQueryChange}
               onQueryClear={() => setQueryValue("")}
-              // onSort={setSortSelected}
-              // primaryAction={primaryAction}
+              onSort={(val) => {
 
+                setSortSelected(val);
+              }}
+              primaryAction={primaryAction}
               cancelAction={{
                 onAction: onHandleCancel,
                 disabled: false,
@@ -563,7 +729,7 @@ export default function HomePage() {
               selected={selected}
               onSelect={setSelected}
               canCreateNewView={false}
-              onCreateNewView={onCreateNewView}
+              // onCreateNewView={onCreateNewView}
               filters={filters}
               appliedFilters={appliedFilters}
               onClearAll={handleFiltersClearAll}
@@ -586,9 +752,9 @@ export default function HomePage() {
               headings={[
                 // { title: "Employee Id" },
                 { title: "Email" },
-                { title: "Grade" },
-                { title: "Total Cap" },
-                { title: "Available Cap" },
+                { title: "Designated Value" },
+                { title: `Total Cap` },
+                { title: `Available Cap` },
                 { title: "Cap Allocation Month" },
               ]}
             >
@@ -596,69 +762,69 @@ export default function HomePage() {
             </IndexTable>
           </LegacyCard>
 
-          <div
-            style={{
-              marginTop: 10,
-              display: "flex",
-              flexDirection: "row",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 2,
-            }}
-          >
-            <button
+          {employees.length > 49 && (
+            <div
               style={{
-                backgroundColor: "#d4d4d4",
-                borderColor: "#d4d4d4",
-                //#C0C0C0
-                borderWidth: 0,
-                borderTopLeftRadius: 5,
-                borderBottomLeftRadius: 5,
-                cursor: "pointer", // Set cursor to pointer
-                transition: "background-color 0.3s", // Smooth transition for background color
-                paddingTop: 5,
-                paddingBottom: 5,
-              }}
-              onClick={handlePreviousPage}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+                marginTop: 10,
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 2,
               }}
             >
-              <Icon source={ChevronLeftIcon} />
-            </button>
+              <button
+                style={{
+                  backgroundColor: "#d4d4d4",
+                  borderColor: "#d4d4d4",
+                  //#C0C0C0
+                  borderWidth: 0,
+                  borderTopLeftRadius: 5,
+                  borderBottomLeftRadius: 5,
+                  cursor: "pointer", // Set cursor to pointer
+                  transition: "background-color 0.3s", // Smooth transition for background color
+                  paddingTop: 5,
+                  paddingBottom: 5,
+                }}
+                onClick={handlePreviousPage}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+                }}
+              >
+                <Icon source={ChevronLeftIcon} />
+              </button>
 
-            <button
-              style={{
-                // width: "20%",
-                // height: "40%",
-                paddingTop: 5,
-                paddingBottom: 5,
-                backgroundColor: "#d4d4d4",
-                borderColor: "#d4d4d4",
-                borderWidth: 0,
-                borderTopRightRadius: 5,
-                borderBottomRightRadius: 5,
-                cursor: "pointer", // Set cursor to pointer
-                transition: "background-color 0.3s", // Smooth transition for background color
-              }}
-              onClick={handleNextPage}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
-              }}
-            >
-              <Icon source={ChevronRightIcon} />
-            </button>
-          </div>
-
+              <button
+                style={{
+                  // width: "20%",
+                  // height: "40%",
+                  paddingTop: 5,
+                  paddingBottom: 5,
+                  backgroundColor: "#d4d4d4",
+                  borderColor: "#d4d4d4",
+                  borderWidth: 0,
+                  borderTopRightRadius: 5,
+                  borderBottomRightRadius: 5,
+                  cursor: "pointer", // Set cursor to pointer
+                  transition: "background-color 0.3s", // Smooth transition for background color
+                }}
+                onClick={handleNextPage}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#c0c0c0"; // Change background on hover
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#d4d4d4"; // Revert to original color on hover out
+                }}
+              >
+                <Icon source={ChevronRightIcon} />
+              </button>
+            </div>
+          )}
         </>
-      }
-
+      )}
     </Page>
   );
   function disambiguateLabel(key) {

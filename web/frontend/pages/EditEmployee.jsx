@@ -5,9 +5,10 @@ import {
   LegacyCard,
   Page,
   PageActions,
+  Select,
   TextField,
 } from "@shopify/polaris";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 export default function EditEmployee() {
@@ -15,12 +16,24 @@ export default function EditEmployee() {
   console.log("oke.", payload);
   const [employeeData, setEmployeeData] = useState({});
   const [employeeEmailError, setEmployeeEmailError] = useState(false);
-  const [employeeGradeError, setEmployeeGradeError] = useState(false);
+  const [employeeDiscountValueError, setEmployeeDiscountValueError] = useState(false);
   const [employeeCapError, setEmployeeCapError] = useState(false);
   const [loading, setloading] = useState(false);
   const [maxCap, setMaxCap] = useState(false);
   const [maxGrade, setMaxGrade] = useState(false);
   const [emailValidationMesage, setEmailValidationMesage] = useState(null);
+  const [selected, setSelected] = useState('percentage');
+  const options = [
+    { label: 'Percentage', value: 'percentage' },
+    { label: 'Fixed Amount', value: 'fixed_amount' },
+  ];
+  const handleSelectChange = useCallback(
+    (value) => {
+      setSelected(value);
+      handleSetEmployee("discountType", value)
+    },
+    [],
+  );
   function checkEmailValidity(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -98,7 +111,7 @@ export default function EditEmployee() {
       setEmployeeEmailError(false);
     }
     if (employeeData.grade) {
-      setEmployeeGradeError(false);
+      setEmployeeDiscountValueError(false);
     }
     if (employeeData.userCapTotal) {
       setEmployeeCapError(false);
@@ -160,11 +173,11 @@ export default function EditEmployee() {
     } else {
       setEmployeeEmailError(false);
     }
-    if (!employeeData.grade) {
-      setEmployeeGradeError(true);
+    if (!employeeData.discountValue) {
+      setEmployeeDiscountValueError(true);
       return;
     } else {
-      setEmployeeGradeError(false);
+      setEmployeeDiscountValueError(false);
     }
     if (!employeeData.userCapTotal) {
       setEmployeeCapError(true);
@@ -236,18 +249,25 @@ export default function EditEmployee() {
               }
             />
 
+            <Select
+
+              label="Select Discount Type"
+              options={options}
+              onChange={handleSelectChange}
+              value={employeeData.discountType || selected}
+            />
+
             <TextField
+              suffix={employeeData.discountType === "percentage" ? "%" : "/="}
               type="number"
-              label="Enter Grade"
-              value={employeeData.grade}
-              onChange={(value) => handleSetEmployee("grade", value)}
+              label="Enter discount value"
+              value={employeeData.discountValue}
+              onChange={(value) => handleSetEmployee("discountValue", value)}
               autoComplete="off"
               error={
-                employeeGradeError
-                  ? "Grade required."
-                  : maxGrade
-                    ? "This is the maximum grade you can assign to employee."
-                    : ""
+                employeeDiscountValueError
+                  ? "discount value required."
+                  : ""
               }
             />
             <TextField

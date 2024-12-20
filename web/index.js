@@ -212,7 +212,36 @@ app.get("/api/credentials", async (_req, res) => {
     });
   }
 });
+app.get("/api/shop/currency", async (_req, res) => {
+  try {
+    const client = new shopify.api.clients.Graphql({
+      session: res.locals.shopify.session,
+    });
 
+    // Fetch shop data
+    const data = await client.query({
+      data: {
+        query: `
+          query {
+            shop {
+              name
+              email
+              currencyCode
+              currencyFormats{
+      moneyFormat
+    }
+            }
+          }
+        `,
+      },
+    });
+
+    res.status(200).send(data.body.data.shop);
+  } catch (error) {
+    console.error("Error getting shop data:", error);
+    res.status(500).send({ message: "Failed to fetch shop data" });
+  }
+});
 app.get("/api/userShop", async (_req, res) => {
   try {
     const client = await shopify.api.rest.Shop.all({

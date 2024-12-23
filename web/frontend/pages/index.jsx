@@ -23,6 +23,10 @@ import {
   SkeletonTabs,
   Link,
   IndexFiltersMode,
+  AppProvider,
+  Frame,
+  Toast,
+  Modal,
 } from "@shopify/polaris";
 import {
   ChevronLeftIcon,
@@ -53,12 +57,14 @@ export default function HomePage() {
   const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [isSelected, setIsSelected] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFetchedEmployees, setIsFetchedEmployees] = useState(false);
   const [employeeAssociation, setEmployeeAssociation] = useState(null);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
   const [page, setPage] = useState(1);
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const [itemStrings, setItemStrings] = useState(["Sort by"]);
+  const [itemStrings, setItemStrings] = useState(["Order Discount for Employees 🎁"]);
   const [sortSelected, setSortSelected] = useState(['cap asc']);
   const sortOptions = [
     { label: 'Avalalble Cap', value: 'cap asc', directionLabel: 'Ascending' },
@@ -67,6 +73,16 @@ export default function HomePage() {
     { label: 'Email', value: 'email desc', directionLabel: 'Z-A' },
   ];
   var { mode, setMode } = useSetIndexFiltersMode(IndexFiltersMode.Filtering);
+
+  const [toastContent, setToastContent] = useState("");
+  const [active, setActive] = useState(false);
+
+  const toggleActive = useCallback(() => setActive((active) => !active), []);
+
+  const toastMarkup = active ? (
+    <Toast content={toastContent} onDismiss={toggleActive} />
+  ) : null;
+
   useEffect(() => {
     console.log('sort selected', sortSelected);
 
@@ -79,7 +95,6 @@ export default function HomePage() {
         sortBy("descending")
         break;
       case "email asc":
-        sortBy("ascending", true)
         break;
       case "email desc":
         sortBy("descending", true)
@@ -97,13 +112,39 @@ export default function HomePage() {
   }, [sortSelected]);
   // Navigate when "Add Employee" tab is clicked
   const handleTabAction = (index) => {
+    console.log('sjd')
+    // deleteEmployee(index);
+    // deleteEmployee()
     if (index === 1) {
       navigate("/AddEmployee");
     }
   };
 
-  const handleFetchEmployees = async (page = 1, limit = 50) => {
+  const handleFetchEmployees = async (page, limit) => {
     try {
+      if (page === undefined || page === null) {
+        page = 1;
+      }
+      else if (page === false) {
+        setIsFetchedEmployees(true);
+        setPagination(true)
+        if (page > 1) {
+          page -= 1;
+        }
+        // else {
+        //   setToastContent("You are on the first page");
+        //   toggleActive();
+        // }
+      }
+      else {
+        setIsFetchedEmployees(true);
+        setPagination(true)
+        page += 1;
+      }
+      if (!limit) {
+        limit = 50;
+      }
+      // console.log('page checko', page)
       // setIsFetchedEmployees(true);
       const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee?page=${page}&limit=${limit}&employeeAssociation=${employeeAssociation}`;
       // const payload = { employeeEmail: userEmail };
@@ -120,17 +161,14 @@ export default function HomePage() {
       }
 
       const data = await response.json(); // Parse JSON from the response
-      // console.log("fetching employees", data);
-      setEmployees(data.data);
-      setFilteredEmployees(data.data);
+      if (data.data.length > 0) {
+        setEmployees(data.data);
+        setFilteredEmployees(data.data);
+      }
+
       setIsFetchedEmployees(false);
 
-      // setDiscountCode(data.data.discount_code.code);
-      // if (!data.status) {
-      //   setDiscountMessage(data.message);
-      // } else {
-      //   await handleAddDiscount(data.data.discount_code.code);
-      // }
+
     } catch (error) {
       setIsFetchedEmployees(false);
 
@@ -144,15 +182,16 @@ export default function HomePage() {
 
   useEffect(() => {
     if (isSelected && itemStrings.length <= 2) {
-      setItemStrings((prevStrings) => [...prevStrings, "Other Options"]);
+      setItemStrings((prevStrings) => [...prevStrings, "Options"]);
     } else {
-      setItemStrings(["Sort by"]);
+      setItemStrings(["Order Discount for Employees"]);
     }
   }, [isSelected]);
 
-  const deleteEmployee = async (index) => {
+  const deleteEmployee = async (id) => {
+    // console.log('chala delete?')
     if (!selectedEmployeeId) return;
-    console.log("employee id", selectedEmployeeId);
+    // console.log("employee id", selectedEmployeeId);
     try {
       setLoading(true);
       const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee/${selectedEmployeeId}`;
@@ -168,17 +207,24 @@ export default function HomePage() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json(); // Parse JSON from the response
-      console.log("is employee delete", data);
+      // console.log("is employee delete", data);
       if (data.status) {
         handleFetchEmployees();
         setIsSelected(false);
+        setToastContent("Employee deleted successfully");
+        toggleActive();
         //hanlde success condition
       } else {
+        setToastContent("Failed to delete employee");
+        toggleActive();
         //hanlde error condition
       }
       setLoading(false);
+      setIsModalOpen(false);
     } catch (error) {
       setLoading(false);
+      setToastContent("Error deleting employee");
+      toggleActive();
       console.error("Error order discount create", error);
     }
   };
@@ -219,73 +265,38 @@ export default function HomePage() {
     actions:
       index === 0
         ? [
-          {
-            type: "",
-            content: "Asscending order",
-            helpText: "(By email)",
-            onAction: () => sortBy("ascending"),
-            onPrimaryAction: (value) => {
-              handleFetchEmployees();
-              return true;
-            },
-          },
-          {
-            type: "",
-            content: "Decending order",
-            helpText: "(By email)",
-            onAction: () => sortBy("descending"),
-            onPrimaryAction: () => {
-              console.log("abc");
-              setEmployees();
-              return true;
-            },
-          },
-          {
-            type: "",
-            content: "Asscending order",
-            helpText: "(By available cap)",
-            // accessibilityLabel: "ajjaja",
-            onAction: () => sortBy("ascending", true),
-            onPrimaryAction: (value) => {
-              handleFetchEmployees();
-              return true;
-            },
-          },
-          {
-            type: "",
-            content: "Decending order",
-            helpText: "(By available cap)",
-            onAction: () => sortBy("descending", true),
-            onPrimaryAction: () => {
-              console.log("abc");
-              setEmployees();
-              return true;
-            },
-          },
+          // {
+          //   type: "",
+          //   content: "Delete employee",
+          //   onAction: () => {
+          //     setIsModalOpen(true);
+          //   },
+          // },
+
         ] // No actions for the first tab
         : index > 0 && [
-          {
-            type: "edit",
-            content: "Edit employee",
-            onAction: () => {
-              navigate("/EditEmployee", { state: selectedEmployeeId });
-            },
-            // onPrimaryAction: async (value) => {
-            //   await editEmployee(value);
-            //   return true;
-            // },
-          },
-          {
-            type: "delete",
-            content: "Delete employee",
-            onAction: () => {
-              console.log("tasdeeq");
-            },
-            onPrimaryAction: async () => {
-              deleteEmployee(index);
-              return true;
-            },
-          },
+          // {
+          //   type: "edit",
+          //   content: "Edit employee",
+          //   onAction: () => {
+          //     navigate("/EditEmployee", { state: selectedEmployeeId });
+          //   },
+          //   // onPrimaryAction: async (value) => {
+          //   //   await editEmployee(value);
+          //   //   return true;
+          //   // },
+          // },
+          // {
+          //   type: "delete",
+          //   content: "Delete employee",
+          //   onAction: () => {
+          //     console.log("tasdeeq");
+          //   },
+          //   onPrimaryAction: async () => {
+          //     deleteEmployee(index);
+          //     return true;
+          //   },
+          // },
         ],
   }));
 
@@ -307,7 +318,6 @@ export default function HomePage() {
   const primaryAction =
     selected === 0
       ? {
-
       }
       : {
         type: "save",
@@ -338,72 +348,11 @@ export default function HomePage() {
     [],
   );
   const filters = [
-    {
-      key: 'accountStatus',
-      label: 'Account status',
-      filter: (
-        <ChoiceList
-          title="Account status"
-          titleHidden
-          choices={[
-            { label: 'Enabled', value: 'enabled' },
-            { label: 'Not invited', value: 'not invited' },
-            { label: 'Invited', value: 'invited' },
-            { label: 'Declined', value: 'declined' },
-          ]}
-          selected={accountStatus || []}
-          onChange={handleAccountStatusChange}
-          allowMultiple
-        />
-      ),
-      shortcut: true,
-    },
-    {
-      key: 'taggedWith',
-      label: 'Tagged with',
-      filter: (
-        <TextField
-          label="Tagged with"
-          value={taggedWith}
-          onChange={handleTaggedWithChange}
-          autoComplete="off"
-          labelHidden
-        />
-      ),
-      shortcut: true,
-    },
-    {
-      key: 'moneySpent',
-      label: 'Money spent',
-      filter: (
-        <RangeSlider
-          label="Money spent is between"
-          labelHidden
-          value={moneySpent || [0, 500]}
-          prefix="$"
-          output
-          min={0}
-          max={2000}
-          step={1}
-          onChange={handleMoneySpentChange}
-        />
-      ),
-    },
   ];
 
-  const appliedFilters =
-    taggedWith && !isEmpty(taggedWith)
-      ? [
-        {
-          key: 'taggedWith',
-          label: disambiguateLabel('taggedWith', taggedWith),
-          onRemove: handleTaggedWithRemove,
-        },
-      ]
-      : [];
+  const appliedFilters = [];
   const {
     selectedResources,
-
     allResourcesSelected,
     handleSelectionChange,
     resourceIDResolver,
@@ -415,8 +364,7 @@ export default function HomePage() {
       handleFetchEmployees(1);
       return;
     }
-    setPage((prev) => ++prev);
-    handleFetchEmployees(page);
+    handleFetchEmployees(true);
   };
 
   const handlePreviousPage = () => {
@@ -428,7 +376,7 @@ export default function HomePage() {
     if (page > 1) {
       setPage((prev) => --prev);
     }
-    handleFetchEmployees(page);
+    handleFetchEmployees(false);
   };
 
   // console.log("state check pagniation page", page);
@@ -555,8 +503,8 @@ export default function HomePage() {
             {order}
           </Text>
         </IndexTable.Cell> */}
-        <Link monochrome
-          removeUnderline onClick={() => navigate("/EditEmployee", { state: selectedEmployeeId })}><IndexTable.Cell>{email}</IndexTable.Cell></Link>
+        <IndexTable.Cell><Link monochrome
+          removeUnderline onClick={() => navigate("/EditEmployee", { state: _id })}>{email}</Link></IndexTable.Cell>
         <IndexTable.Cell>
           {discountValue}
           {discountType.toLowerCase() === "percentage" ? " %" : " /="}
@@ -572,9 +520,14 @@ export default function HomePage() {
           {userCapRemain}
         </IndexTable.Cell>
         <IndexTable.Cell>{formatDate(allocatedMonth)}</IndexTable.Cell>
+        <IndexTable.Cell>  <Button destructive onClick={() => {
+          setSelectedEmployeeId(_id);
+          setIsModalOpen(true);
+        }}>Delete Employee</Button></IndexTable.Cell>
       </IndexTable.Row>
     )
   );
+  // console.log('jsjssj', selectedEmployeeId, isModalOpen)
   const fetchUserShop = async () => {
     try {
       setIsFetchedEmployees(true);
@@ -662,8 +615,12 @@ export default function HomePage() {
     handleGetShopInfo();
     saveCredentials();
   }, []);
+
+
+  console.log('asdkhflj', pagination, employees.length > 49)
   return (
     <Page fullWidth>
+
       <div
         style={{
           display: "flex",
@@ -679,7 +636,7 @@ export default function HomePage() {
           fontWeight="semibold"
           alignment="center"
         >
-          Manage Cambridge Employees
+          {`Manage Employees`}
         </Text>
         <div
           style={{ alignSelf: "flex-end", display: "flex", marginBottom: 10 }}
@@ -692,15 +649,17 @@ export default function HomePage() {
           </Button>
         </div>
       </div>
-
       {isFetchedEmployees ? (
         <>
           <LegacyCard sectioned>
             <div style={{ display: "flex", justifyContent: "space-between", alignContent: 'center', marginBottom: 5 }}>
               <SkeletonThumbnail size="small" />
-              <SkeletonThumbnail size="small" />
+              <div style={{ display: "flex", justifyContent: "space-between", gap: '10px', alignContent: 'center', marginBottom: 5 }}>
+                <SkeletonThumbnail size="small" />
+                <SkeletonThumbnail size="small" />
+              </div>
             </div>
-            <SkeletonTabs fitted={false} count={5} />
+            {/* <SkeletonTabs fitted={false} count={5} /> */}
             <div style={{ marginBottom: 10 }} />
             <SkeletonBodyText lines={7} />
           </LegacyCard>
@@ -716,10 +675,9 @@ export default function HomePage() {
               onQueryChange={handleFiltersQueryChange}
               onQueryClear={() => setQueryValue("")}
               onSort={(val) => {
-
                 setSortSelected(val);
               }}
-              primaryAction={primaryAction}
+              // primaryAction={primaryAction}
               cancelAction={{
                 onAction: onHandleCancel,
                 disabled: false,
@@ -737,6 +695,7 @@ export default function HomePage() {
               setMode={setMode}
             />
             <IndexTable
+              selectable={false}
               resourceName={resourceName}
               itemCount={filteredEmployees.length}
               selectedItemsCount={
@@ -756,13 +715,14 @@ export default function HomePage() {
                 { title: `Total Cap` },
                 { title: `Available Cap` },
                 { title: "Cap Allocation Month" },
+                { title: "Action" },
               ]}
             >
               {rowMarkup}
             </IndexTable>
           </LegacyCard>
 
-          {employees.length > 49 && (
+          {(employees.length > 49 || pagination === true) && (
             <div
               style={{
                 marginTop: 10,
@@ -825,6 +785,39 @@ export default function HomePage() {
           )}
         </>
       )}
+      <AppProvider>
+        <Frame topBar={false} navigation={false}>
+          {/* <Frame> */}
+          <Modal
+            // activator={activator}
+            open={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            title="Delete Employee"
+            primaryAction={{
+              content: 'Confirm',
+              onAction: () => deleteEmployee(),
+              icon: DeleteIcon,
+              destructive: true,
+              loading: loading
+            }}
+          // secondaryActions={[
+          //   {
+          //     content: 'Learn more',
+          //     onAction: handleChange,
+          //   },
+          // ]}
+          >
+            <Modal.Section>
+              <TextContainer>
+                <p>
+                  Are you sure you want to delete this employee? this action can't be undone
+                </p>
+              </TextContainer>
+            </Modal.Section>
+          </Modal>
+          {/* </Frame> */}
+          {toastMarkup}
+        </Frame></AppProvider>
     </Page>
   );
   function disambiguateLabel(key) {

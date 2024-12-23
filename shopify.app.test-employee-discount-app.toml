@@ -3,7 +3,7 @@
 client_id = "073e3629717691f45681e38ff78048f0"
 name = "test-employee-discount-app"
 handle = "test-employee-discount-app"
-application_url = "https://circus-why-beginner-guides.trycloudflare.com"
+application_url = "https://tgp-annual-partners-fossil.trycloudflare.com"
 embedded = true
 
 [build]
@@ -17,9 +17,9 @@ scopes = "read_customers,read_discounts,read_price_rules,read_products,unauthent
 
 [auth]
 redirect_urls = [
-  "https://circus-why-beginner-guides.trycloudflare.com/auth/callback",
-  "https://circus-why-beginner-guides.trycloudflare.com/auth/shopify/callback",
-  "https://circus-why-beginner-guides.trycloudflare.com/api/auth/callback"
+  "https://tgp-annual-partners-fossil.trycloudflare.com/auth/callback",
+  "https://tgp-annual-partners-fossil.trycloudflare.com/auth/shopify/callback",
+  "https://tgp-annual-partners-fossil.trycloudflare.com/api/auth/callback"
 ]
 
 [webhooks]

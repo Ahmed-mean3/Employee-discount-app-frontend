@@ -187,6 +187,7 @@ export default function EditEmployee() {
     }
     try {
       setloading(true);
+      console.log('chekcup', payload.state)
       const apiUrl = `https://multi-store-employee-discount-app.vercel.app/api/employee/${payload.state}`;
       const response = await fetch(apiUrl, {
         method: "PATCH",

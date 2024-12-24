@@ -302,3 +302,10 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
+// app.listen(process.env.PORT || PORT, () => {
+//   console.log(
+//     `Database Connected Successfully and server is listening on this port ${
+//       process.env.PORT || PORT
+//     }`
+//   );
+// });

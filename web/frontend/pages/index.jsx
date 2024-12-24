@@ -64,15 +64,15 @@ export default function HomePage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState();
   const [page, setPage] = useState(1);
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-  const [itemStrings, setItemStrings] = useState(["Order Discount for Employees 🎁"]);
+  const [itemStrings, setItemStrings] = useState(["Order Discount for Employees"]);
   const [sortSelected, setSortSelected] = useState(['cap asc']);
   const sortOptions = [
-    { label: 'Avalalble Cap', value: 'cap asc', directionLabel: 'Ascending' },
-    { label: 'Avalalble Cap', value: 'cap desc', directionLabel: 'Descending' },
+    { label: 'Availalble Cap', value: 'cap asc', directionLabel: 'Ascending' },
+    { label: 'Availalble Cap', value: 'cap desc', directionLabel: 'Descending' },
     { label: 'Email', value: 'email asc', directionLabel: 'A-Z' },
     { label: 'Email', value: 'email desc', directionLabel: 'Z-A' },
   ];
-  var { mode, setMode } = useSetIndexFiltersMode(IndexFiltersMode.Filtering);
+  var { mode, setMode } = useSetIndexFiltersMode();
 
   const [toastContent, setToastContent] = useState("");
   const [active, setActive] = useState(false);
@@ -95,6 +95,7 @@ export default function HomePage() {
         sortBy("descending")
         break;
       case "email asc":
+        sortBy("ascending", true)
         break;
       case "email desc":
         sortBy("descending", true)
@@ -123,6 +124,7 @@ export default function HomePage() {
   const handleFetchEmployees = async (page, limit) => {
     try {
       if (page === undefined || page === null) {
+        setPagination(false)
         page = 1;
       }
       else if (page === false) {
@@ -209,7 +211,7 @@ export default function HomePage() {
       const data = await response.json(); // Parse JSON from the response
       // console.log("is employee delete", data);
       if (data.status) {
-        handleFetchEmployees();
+        handleFetchEmployees(null);
         setIsSelected(false);
         setToastContent("Employee deleted successfully");
         toggleActive();
@@ -241,7 +243,7 @@ export default function HomePage() {
   // Sort in Ascending order by email
   const sortBy = (method, By = false) => {
     const sorted = [...filteredEmployees].sort((a, b) => {
-      if (By) {
+      if (!By) {
         // Sort numerically by userCapRemain
         return method === "ascending"
           ? parseInt(b.userCapRemain) - parseInt(a.userCapRemain)
@@ -257,6 +259,7 @@ export default function HomePage() {
   };
 
   const tabs = itemStrings.map((item, index) => ({
+
     content: item,
     index,
     onAction: () => handleTabAction(index), // Navigation handler
@@ -506,8 +509,9 @@ export default function HomePage() {
         <IndexTable.Cell><Link monochrome
           removeUnderline onClick={() => navigate("/EditEmployee", { state: _id })}>{email}</Link></IndexTable.Cell>
         <IndexTable.Cell>
+          {discountType.toLowerCase() !== "percentage" ? currencyCode + " " : ""}
           {discountValue}
-          {discountType.toLowerCase() === "percentage" ? " %" : " /="}
+          {discountType.toLowerCase() === "percentage" ? " %" : ""}
         </IndexTable.Cell>
         <IndexTable.Cell>
           <Text as="span" numeric>
@@ -520,10 +524,10 @@ export default function HomePage() {
           {userCapRemain}
         </IndexTable.Cell>
         <IndexTable.Cell>{formatDate(allocatedMonth)}</IndexTable.Cell>
-        <IndexTable.Cell>  <Button destructive onClick={() => {
+        <IndexTable.Cell>  <Button plain destructive onClick={() => {
           setSelectedEmployeeId(_id);
           setIsModalOpen(true);
-        }}>Delete Employee</Button></IndexTable.Cell>
+        }}>Delete</Button></IndexTable.Cell>
       </IndexTable.Row>
     )
   );
@@ -630,15 +634,30 @@ export default function HomePage() {
           gap: 10,
         }}
       >
-        <Text
-          element="h2"
-          variant="headingXl"
-          fontWeight="semibold"
-          alignment="center"
-        >
-          {`Manage Employees`}
-        </Text>
-        <div
+        <div style={{ alignSelf: 'flex-end', display: 'flex', width: '100%', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <Text
+            element="h2"
+            variant="headingXl"
+            fontWeight="semibold"
+          >Discount Employees</Text>
+          <Button
+            icon={PersonFilledIcon}
+            onClick={() => navigate("/AddEmployee")}
+          >
+            Add Employee
+          </Button>
+        </div>
+        {/* </div> */}
+        {/* <div style={{ alignSelf: 'flex-end' }}>
+
+          <Button
+            icon={PersonFilledIcon}
+            onClick={() => navigate("/AddEmployee")}
+          >
+            Add Employee
+          </Button>
+        </div> */}
+        {/* <div
           style={{ alignSelf: "flex-end", display: "flex", marginBottom: 10 }}
         >
           <Button
@@ -647,7 +666,8 @@ export default function HomePage() {
           >
             Add Employee
           </Button>
-        </div>
+        </div> */}
+
       </div>
       {isFetchedEmployees ? (
         <>
@@ -661,7 +681,7 @@ export default function HomePage() {
             </div>
             {/* <SkeletonTabs fitted={false} count={5} /> */}
             <div style={{ marginBottom: 10 }} />
-            <SkeletonBodyText lines={7} />
+            <SkeletonBodyText lines={6} />
           </LegacyCard>
         </>
       ) : (
